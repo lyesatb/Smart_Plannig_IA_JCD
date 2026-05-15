@@ -1,0 +1,27 @@
+# Node
+node_modules/
+npm-debug.log
+yarn-debug.log
+yarn-error.log
+
+# Next.js
+.next/
+out/
+
+# Python
+__pycache__/
+*.pyc
+
+# FastAPI
+backend/.pytest_cache/
+backend/.mypy_cache/
+
+# Docker
+*.env
+.env.local
+.env.production
+.env.development
+
+# OS
+.DS_Store
+Thumbs.db
