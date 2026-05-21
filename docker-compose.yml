@@ -5,6 +5,21 @@ services:
     build: ./backend
     ports:
       - "8000:8000"
+    env_file:
+      - .env
+    environment:
+      - CHROMA_PERSIST_DIR=app/.chroma
+      # Docker / proxy : certificats Groq (sinon APIConnectionError). Affiché « OK réseau Docker » dans l’UI.
+      - GROQ_INSECURE_SKIP_SSL_VERIFY=1
+      - GROQ_MODEL=llama-3.1-8b-instant
+      - GROQ_MAX_PANELS_LLM=15
+      - GROQ_BATCH_SIZE=4
+      - GROQ_BATCH_DELAY_S=3.5
+      - GROQ_MIN_INTERVAL_S=2.5
+      - GROQ_BETWEEN_REQUESTS_S=2
+      - GROQ_MAX_PANELS_LLM=12
+      - GROQ_PANEL_COPY_RETRIES=1
+      - GROQ_BETWEEN_REQUESTS_S=2
     volumes:
       - ./backend:/app
 

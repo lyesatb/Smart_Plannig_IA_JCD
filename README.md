@@ -84,12 +84,17 @@ Trouve-moi les meilleurs panneaux digitaux disponibles à Lyon pour une campagne
 Je veux maximiser la couverture à Marseille pour une campagne jeunes actifs.
 ```
 
+## Variables d’environnement (Groq + RAG gratuit)
+
+- **LLM** : [Groq](https://console.groq.com/) (clé `gsk_...`, API compatible OpenAI). Variables : `GROQ_API_KEY`, `GROQ_MODEL` (ex. `llama-3.1-8b-instant`).
+- **Rétrocompat** : vous pouvez aussi mettre la clé Groq dans `OPENAI_API_KEY` (même préfixe `gsk_`).
+- **Embeddings RAG** : par défaut **FastEmbed** (local, CPU, sans clé). Variable `FASTEMBED_MODEL` (ex. `intfloat/multilingual-e5-small`). Avec une clé OpenAI `sk-` / `proj-` et `EMBEDDING_BACKEND=openai`, les embeddings OpenAI sont utilisés.
+- Copiez `.env.example` vers `.env` et renseignez `GROQ_API_KEY`. Si vous changiez de fournisseur d’embeddings, videz ou changez `RAG_COLLECTION` / le dossier `CHROMA_PERSIST_DIR` pour éviter un conflit de dimensions dans Chroma.
+
 ## Prochaine étape
 
 Ajouter :
 
-- Mapbox réel,
-- OpenAI API pour l’agent,
-- RAG ChromaDB,
 - export PDF,
-- base PostgreSQL/PostGIS.
+- base PostgreSQL/PostGIS,
+- connecteurs données JCDecaux réels.
