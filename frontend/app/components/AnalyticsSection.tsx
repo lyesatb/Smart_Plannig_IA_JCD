@@ -14,8 +14,6 @@ import {
 } from "lucide-react";
 import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, Legend } from "recharts";
 
-const API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
-
 type Panel = {
   panel_id: string;
   explanation?: string;
@@ -86,10 +84,12 @@ export function AnalyticsSection({
   analytics,
   criteria,
   panels,
+  apiBase,
 }: {
   analytics: RecAnalytics;
   criteria?: Record<string, unknown>;
   panels?: Panel[];
+  apiBase: string;
 }) {
   const poiData = mergeCompare(analytics.poi_distribution);
   const cityData = mergeCompare(analytics.city_distribution);
@@ -121,6 +121,7 @@ export function AnalyticsSection({
           </p>
         </div>
         <ExportButtons
+          apiBase={apiBase}
           criteria={exportCriteria}
           planCount={s?.recommended ?? panels?.length ?? 0}
           eligibleCount={s?.export_excel_rows ?? s?.eligible_panels ?? 0}
@@ -378,11 +379,13 @@ function DistChart({
 }
 
 function ExportButtons({
+  apiBase,
   criteria,
   planCount,
   eligibleCount,
   panels,
 }: {
+  apiBase: string;
   criteria?: Record<string, unknown>;
   planCount?: number;
   eligibleCount?: number;
@@ -404,7 +407,7 @@ function ExportButtons({
     setLoading(scope);
     try {
       const path = scope === "plan" ? "/export/plan-retenu" : "/export/parc-eligible";
-      const res = await fetch(`${API}${path}`, {
+      const res = await fetch(`${apiBase}${path}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(buildPayload()),

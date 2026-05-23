@@ -58,7 +58,8 @@ Optionnel : volume Railway monté sur `/data` et `CHROMA_PERSIST_DIR=/data/chrom
 
 | Variable | Valeur |
 |----------|--------|
-| `NEXT_PUBLIC_API_URL` | URL Railway **sans** slash final, ex. `https://xxx.up.railway.app` |
+| `API_URL` | URL Railway **sans** slash final, ex. `https://xxx.up.railway.app` (**recommandé**) |
+| `NEXT_PUBLIC_API_URL` | (optionnel) même URL — `API_URL` suffit après redeploy |
 
 5. **Deploy**
 6. Copier l’URL Vercel, ex. `https://smart-plannig-ia-jcd.vercel.app`

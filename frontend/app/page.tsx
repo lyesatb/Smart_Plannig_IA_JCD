@@ -10,8 +10,7 @@ const MapView = dynamic(
 );
 import { AnalyticsSection } from "./components/AnalyticsSection";
 import { EngineMeta } from "./components/EngineMeta";
-
-const API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+import { getApiBase } from "../lib/get-api-base";
 
 type Panel = {
   panel_id: string;
@@ -36,22 +35,35 @@ export default function Home() {
   const [loading, setLoading] = useState(false);
   const [chatError, setChatError] = useState<string | null>(null);
   const [kpisLoading, setKpisLoading] = useState(true);
+  const [apiBase, setApiBase] = useState<string | null>(null);
 
   useEffect(() => {
-    setKpisLoading(true);
-    fetch(`${API}/kpis`)
-      .then(r => r.json())
-      .then(setKpis)
-      .finally(() => setKpisLoading(false));
+    getApiBase().then(setApiBase);
   }, []);
 
+  useEffect(() => {
+    if (!apiBase) return;
+    setKpisLoading(true);
+    fetch(`${apiBase}/kpis`)
+      .then((r) => r.json())
+      .then(setKpis)
+      .catch(() => setKpis(null))
+      .finally(() => setKpisLoading(false));
+  }, [apiBase]);
+
   async function send() {
+    if (!apiBase) {
+      setChatError(
+        "API non configurée. Sur Vercel : variable API_URL = URL Railway (https://...), puis Redeploy."
+      );
+      return;
+    }
     setLoading(true);
     setChatError(null);
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 300000);
     try {
-      const res = await fetch(`${API}/chat`, {
+      const res = await fetch(`${apiBase}/chat`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ message }),
@@ -67,7 +79,7 @@ export default function Home() {
       setChatError(
         err.name === "AbortError"
           ? "Délai dépassé (5 min). Relancez une fois après 30 s — le plan partiel peut déjà s’afficher si la requête a répondu."
-          : "Impossible de joindre l’API. Vérifiez que le backend tourne sur le port 8000."
+          : `Impossible de joindre l’API (${apiBase}). Vercel → API_URL = URL Railway https://… puis Redeploy. Railway → ALLOWED_ORIGINS = ton URL Vercel.`
       );
     } finally {
       clearTimeout(timeout);
@@ -194,11 +206,14 @@ export default function Home() {
         </div>
 
         {answer?.recommendation?.analytics && (
+          {apiBase && (
           <AnalyticsSection
+            apiBase={apiBase}
             analytics={answer.recommendation.analytics}
             criteria={(answer.extracted_criteria || answer.recommendation?.criteria) as Record<string, unknown>}
             panels={panels}
           />
+          )}
         )}
       </section>
     </main>
