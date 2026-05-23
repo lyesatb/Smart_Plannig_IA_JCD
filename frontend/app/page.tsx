@@ -205,15 +205,13 @@ export default function Home() {
           <MapView panels={panels} />
         </div>
 
-        {answer?.recommendation?.analytics && (
-          {apiBase && (
+        {answer?.recommendation?.analytics && apiBase && (
           <AnalyticsSection
             apiBase={apiBase}
             analytics={answer.recommendation.analytics}
             criteria={(answer.extracted_criteria || answer.recommendation?.criteria) as Record<string, unknown>}
             panels={panels}
           />
-          )}
         )}
       </section>
     </main>
