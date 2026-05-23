@@ -58,7 +58,7 @@ Optionnel : volume Railway monté sur `/data` et `CHROMA_PERSIST_DIR=/data/chrom
 
 | Variable | Valeur |
 |----------|--------|
-| `API_URL` | URL Railway **sans** slash final, ex. `https://xxx.up.railway.app` (**recommandé**) |
+| `API_URL` | Domaine Railway, ex. `https://xxx.up.railway.app` ou `xxx.up.railway.app` (**https ajouté auto**) |
 | `NEXT_PUBLIC_API_URL` | (optionnel) même URL — `API_URL` suffit après redeploy |
 
 5. **Deploy**
