@@ -2,7 +2,12 @@
 
 import { useEffect, useState } from "react";
 import { MapPin, Sparkles, BarChart3, Send, Monitor, Target, Zap } from "lucide-react";
-import { MapView } from "./components/MapView";
+import dynamic from "next/dynamic";
+
+const MapView = dynamic(
+  () => import("./components/MapView").then((m) => m.MapView),
+  { ssr: false, loading: () => <div className="h-[420px] rounded-3xl bg-black/20 animate-pulse" /> },
+);
 import { AnalyticsSection } from "./components/AnalyticsSection";
 import { EngineMeta } from "./components/EngineMeta";
 

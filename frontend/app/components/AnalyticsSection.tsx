@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type ReactNode } from "react";
+import { useState, type ReactElement } from "react";
 import {
   BarChart3,
   Download,
@@ -342,7 +342,7 @@ function ChartCard({
 }: {
   title: string;
   subtitle?: string;
-  children: ReactNode;
+  children: ReactElement;
 }) {
   return (
     <div className="analytics-chart-card">
@@ -350,9 +350,7 @@ function ChartCard({
       {subtitle && <p className="text-xs text-gray-500 mt-0.5 mb-3">{subtitle}</p>}
       {!subtitle && <div className="mb-3" />}
       <div className="h-[200px]">
-        <ResponsiveContainer width="100%" height="100%">
-          {children}
-        </ResponsiveContainer>
+        <ResponsiveContainer width="100%" height="100%">{children}</ResponsiveContainer>
       </div>
     </div>
   );

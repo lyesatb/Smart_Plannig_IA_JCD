@@ -35,7 +35,7 @@ export function MapView({ panels }: { panels: Panel[] }) {
 
   return (
     <div className="relative h-[420px] rounded-3xl overflow-hidden bg-black/20 border border-white/10">
-      <MapContainer center={center} zoom={12} scrollWheelZoom className="h-full w-full">
+      <MapContainer center={center} zoom={12} scrollWheelZoom={true} className="h-full w-full">
         <TileLayer
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
