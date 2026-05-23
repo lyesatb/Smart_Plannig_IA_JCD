@@ -14,6 +14,45 @@ def normalize(series):
         return series * 0
     return (series - min_v) / (max_v - min_v) * 100
 
+def poi_criterion_tokens(criteria: dict | None) -> set[str]:
+    """POI demandé dans le brief (champ poi et/ou objectif)."""
+    if not criteria:
+        return set()
+    tokens: set[str] = set()
+    for raw in (criteria.get("poi"), criteria.get("objective")):
+        if not raw:
+            continue
+        s = str(raw).lower()
+        if "gare" in s:
+            tokens.add("gare")
+        if "aéroport" in s or "aeroport" in s:
+            tokens.add("aéroport")
+        if "université" in s or "universite" in s or "campus" in s:
+            tokens.add("université")
+        if "centre commercial" in s or "retail" in s or "shopping" in s:
+            tokens.add("centre commercial")
+        if "cinéma" in s or "cinema" in s:
+            tokens.add("cinéma")
+        if "stade" in s:
+            tokens.add("stade")
+        if "restaurant" in s:
+            tokens.add("restaurant")
+    return tokens
+
+
+def panel_matches_poi_criterion(row, tokens: set[str]) -> bool:
+    if not tokens:
+        return True
+    poi = str(row.get("poi_nearby") or "").lower()
+    district = str(row.get("district") or "").lower()
+    for t in tokens:
+        if t in poi or poi == t:
+            return True
+        if t == "centre commercial" and "zone commerciale" in district:
+            return True
+    return False
+
+
 def target_score(row, target):
     if not target:
         return (row["audience_csp_plus"] + row["audience_young_active"]) / 2
@@ -27,10 +66,19 @@ def target_score(row, target):
         return (row["audience_csp_plus"] * 0.45) + (row["audience_young_active"] * 0.55)
     return (row["audience_csp_plus"] + row["audience_young_active"]) / 2
 
-def poi_score(row, objective, industry):
+def poi_score(row, objective, industry, poi_criterion=None):
     score = 50
     poi = str(row["poi_nearby"]).lower()
     district = str(row["district"]).lower()
+
+    crit_tokens = poi_criterion_tokens(
+        {"poi": poi_criterion, "objective": objective}
+    )
+    if crit_tokens:
+        if panel_matches_poi_criterion(row, crit_tokens):
+            score += 45
+        else:
+            score -= 35
 
     if industry:
         ind = industry.lower()
@@ -43,14 +91,14 @@ def poi_score(row, objective, industry):
 
     if objective:
         obj = objective.lower()
-        if "gare" in obj and "gare" in poi:
+        if "gare" in obj and poi == "gare":
             score += 35
         if "couverture" in obj:
             score += 10
         if "premium" in obj and ("premium" in district or "affaires" in district):
             score += 25
 
-    return min(score, 100)
+    return max(0, min(score, 100))
 
 def constraint_score(row):
     if row["maintenance_status"] != "ok":
@@ -86,13 +134,14 @@ def explain(row, criteria: dict):
     if row["visibility_score"] > 80:
         reasons.append("excellente visibilité")
     poi_val = str(row.get("poi_nearby") or "").strip()
+    brief_poi = (criteria.get("poi") or "").lower()
     if poi_val:
-        if "gare" in objective and poi_val.lower() == "gare":
+        if brief_poi and panel_matches_poi_criterion(row, poi_criterion_tokens(criteria)):
+            reasons.append(f"aligné brief POI : {criteria.get('poi')}")
+        elif "gare" in objective and poi_val.lower() == "gare":
             reasons.append("emplacement proche d'une gare")
-        elif "gare" not in objective or poi_val.lower() != "gare":
-            reasons.append(f"POI pertinent : {poi_val}")
         else:
-            reasons.append(f"proximité POI : {poi_val}")
+            reasons.append(f"POI : {poi_val}")
 
     # Industry hints (lightweight, non-invasive)
     if industry in {"bio", "food", "retail"} and str(row.get("poi_nearby", "")).lower() in {"centre commercial", "zone commerciale"}:
@@ -162,11 +211,20 @@ def _compute_scored_frames(criteria: dict):
     ineligible = df[df["maintenance_status"] != "ok"].copy()
     df = df[df["maintenance_status"] == "ok"].copy()
 
+    poi_tokens = poi_criterion_tokens(criteria)
+    if poi_tokens:
+        df = df[df.apply(lambda r: panel_matches_poi_criterion(r, poi_tokens), axis=1)]
+
     df["availability_score"] = df["availability"].apply(lambda x: 100 if bool(x) else 0)
     df["audience_score"] = normalize(df["daily_traffic"])
     df["target_match_score"] = df.apply(lambda r: target_score(r, criteria.get("target")), axis=1)
     df["poi_score"] = df.apply(
-        lambda r: poi_score(r, criteria.get("objective"), criteria.get("industry")),
+        lambda r: poi_score(
+            r,
+            criteria.get("objective"),
+            criteria.get("industry"),
+            criteria.get("poi"),
+        ),
         axis=1,
     )
     df["visibility_component"] = df["visibility_score"]
@@ -213,6 +271,7 @@ def _diversified_pick(df: pd.DataFrame, k: int, criteria: dict | None = None) ->
     k = max(int(k), 1)
     candidates = df.sort_values("smart_score", ascending=False).copy()
     max_city = _max_per_city(criteria, k)
+    lock_poi = bool(poi_criterion_tokens(criteria))
 
     picked_rows = []
     used_district: set[str] = set()
@@ -238,12 +297,15 @@ def _diversified_pick(df: pd.DataFrame, k: int, criteria: dict | None = None) ->
             if city_counts.get(c, 0) >= max_city:
                 continue
 
-            if d in used_district or p in used_poi or f in used_format:
+            if d in used_district or f in used_format:
+                continue
+            if not lock_poi and p in used_poi:
                 continue
 
             round_pick.append(row)
             used_district.add(d)
-            used_poi.add(p)
+            if not lock_poi:
+                used_poi.add(p)
             used_format.add(f)
             city_counts[c] = city_counts.get(c, 0) + 1
             if len(picked_rows) + len(round_pick) >= k:
@@ -266,7 +328,7 @@ def _diversified_pick(df: pd.DataFrame, k: int, criteria: dict | None = None) ->
             pen = 0.0
             if d in used_district:
                 pen += 8.0
-            if p in used_poi:
+            if not lock_poi and p in used_poi:
                 pen += 6.0
             if f in used_format:
                 pen += 4.0
@@ -313,6 +375,9 @@ def recommend_panels(criteria):
     return {
         "summary": f"{len(results)} panneaux recommandés avec un score moyen de {avg_score}. Audience potentielle quotidienne estimée : {reach:,}.",
         "criteria": criteria,
+        "eligible_count": int(len(eligible)),
+        "pool_internal_count": int(len(pool)),
+        "export_row_count": int(len(eligible)),
         "estimated_daily_reach": reach,
         "average_score": avg_score,
         "results": results,

@@ -41,6 +41,50 @@ def _avg(df: pd.DataFrame, col: str) -> float | None:
     return round(float(df[col].mean()), 2)
 
 
+def _plan_insights(
+    eligible: pd.DataFrame,
+    selected: pd.DataFrame,
+) -> dict[str, Any]:
+    """Synthèse actionnable : plan retenu vs parc éligible (pas le pool technique Excel)."""
+    elig_n = len(eligible)
+    rec_n = len(selected)
+    elig_avg = _avg(eligible, "smart_score")
+    rec_avg = _avg(selected, "smart_score")
+    uplift = (
+        round(rec_avg - elig_avg, 1)
+        if rec_avg is not None and elig_avg is not None
+        else None
+    )
+
+    reach = 0
+    if not selected.empty and "daily_traffic" in selected.columns:
+        reach = int(selected["daily_traffic"].fillna(0).sum())
+
+    top_poi = _count_by_column(selected, "poi_nearby", limit=1)
+    top_format = _count_by_column(selected, "format", limit=1)
+    top_city = _count_by_column(selected, "city", limit=3)
+
+    min_score = max_score = None
+    if not selected.empty and "smart_score" in selected.columns:
+        s = selected["smart_score"]
+        min_score = round(float(s.min()), 1)
+        max_score = round(float(s.max()), 1)
+
+    return {
+        "selection_rate_pct": round(100.0 * rec_n / elig_n, 2) if elig_n else 0,
+        "score_uplift_vs_eligible": uplift,
+        "eligible_count": elig_n,
+        "score_min": min_score,
+        "score_max": max_score,
+        "estimated_daily_reach": reach,
+        "cities_count": int(selected["city"].nunique()) if not selected.empty and "city" in selected.columns else 0,
+        "poi_diversity": int(selected["poi_nearby"].nunique()) if not selected.empty and "poi_nearby" in selected.columns else 0,
+        "top_poi": top_poi[0]["label"] if top_poi else None,
+        "top_format": top_format[0]["label"] if top_format else None,
+        "cities_breakdown": top_city,
+    }
+
+
 def build_selection_rationale(
     eligible: pd.DataFrame,
     pool: pd.DataFrame,
@@ -57,16 +101,24 @@ def build_selection_rationale(
         "pool_size": pool_n,
         "eligible_count": elig_n,
         "recommended_count": rec_n,
-        "title": f"Pourquoi {rec_n} panneaux retenus sur {pool_n} dans le pool scoring ?",
+        "title": f"Pourquoi {rec_n} panneaux retenus sur {elig_n:,} éligibles ?",
         "summary": (
-            f"Sur {elig_n:,} panneaux éligibles, le moteur isole les {pool_n} meilleurs scores smart_score "
-            f"(disponibilité, audience, cible, POI, visibilité). Seuls {rec_n} sont retenus dans le plan média "
-            f"(top_k={top_k}) pour garder un plan lisible et diversifié."
+            f"Le brief filtre le parc : {elig_n:,} panneaux éligibles"
+            + (
+                f" (POI « {criteria.get('poi')} » uniquement)"
+                if criteria.get("poi")
+                else " (disponibles, maintenance OK)"
+            )
+            + f". Le plan média en retient {rec_n} (top_k={top_k}) parmi les meilleurs smart_score."
         ),
         "reasons": [
-            f"Plafond plan média : top_k = {top_k} (dérivé du brief / budget / couverture).",
-            "Diversification : éviter doublons quartier, POI et format dans la sélection finale.",
-            f"Les {pool_n - rec_n} autres panneaux du pool restent des alternatives — export Excel ci-dessous.",
+            f"Plafond plan média : top_k = {top_k} (brief / budget / couverture).",
+            *(
+                [f"Filtre POI brief : « {criteria.get('poi')} » — seuls les panneaux alignés entrent dans le parc."]
+                if criteria.get("poi")
+                else ["Diversification : quartiers et formats variés dans le plan."]
+            ),
+            f"Les {elig_n - rec_n:,} autres panneaux éligibles restent disponibles — export Excel.",
         ],
         "scoring_weights": {
             "disponibilité": "30%",
@@ -98,14 +150,45 @@ def build_recommendation_analytics(
     if not inel_scores.empty and "smart_score" not in inel_scores.columns:
         inel_scores["smart_score"] = inel_scores.get("visibility_score", 50)
 
+    elig_n = int(len(eligible))
+    inel_n = int(len(inel))
+    pool_n = int(len(pool))
+    rec_n = int(len(selected))
+
     return {
         "summary": {
-            "eligible_panels": int(len(eligible)),
-            "ineligible_panels": int(len(inel)),
-            "scoring_pool": int(len(pool)),
-            "recommended": int(len(selected)),
+            "eligible_panels": elig_n,
+            "ineligible_panels": inel_n,
+            "scoring_pool": pool_n,
+            "recommended": rec_n,
+            "filtered_panels": elig_n + inel_n,
             "availability_rate_eligible_pct": avail_pct,
+            "pool_internal_count": pool_n,
+            "export_excel_rows": elig_n,
         },
+        "pipeline": {
+            "steps": [
+                {
+                    "id": "filtered",
+                    "label": "Après filtres brief",
+                    "count": elig_n + inel_n,
+                    "hint": "Villes & critères du brief",
+                },
+                {
+                    "id": "eligible",
+                    "label": "Parc éligible",
+                    "count": elig_n,
+                    "hint": "Scorés et disponibles pour la campagne",
+                },
+                {
+                    "id": "plan",
+                    "label": "Plan retenu",
+                    "count": rec_n,
+                    "hint": f"top_k={int(crit.get('top_k') or rec_n)} affichés sur la carte",
+                },
+            ],
+        },
+        "plan_insights": _plan_insights(eligible, selected),
         "averages": {
             "smart_score": {
                 "eligible": _avg(eligible, "smart_score"),

@@ -6,6 +6,7 @@ from pydantic import BaseModel
 
 from app.config.settings import get_settings
 from app.llm.factory import get_chat_llm, parse_llm_json
+from app.llm.router import GroqTask
 from app.llm.invoke import invoke_with_retry
 from app.tools.brief_utils import brief_to_scoring_criteria
 
@@ -37,7 +38,7 @@ _SYSTEM = (
 
 def brief_extraction_tool(message: str) -> dict[str, Any]:
     settings = get_settings()
-    llm = get_chat_llm(settings)
+    llm = get_chat_llm(settings, task=GroqTask.EXTRACTION)
 
     schema = BriefToolOutput.model_json_schema()
     prompt = (

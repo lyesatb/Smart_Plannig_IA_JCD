@@ -21,4 +21,5 @@ RUN pip install --trusted-host pypi.org --trusted-host files.pythonhosted.org --
 
 COPY app ./app
 
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+# Railway injecte $PORT
+CMD ["sh", "-c", "uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000}"]

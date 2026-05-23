@@ -7,7 +7,7 @@ from typing import Any
 from langchain_core.language_models.chat_models import BaseChatModel
 
 from app.llm.throttle import wait_llm_slot
-from app.llm.usage import record_groq_call
+from app.llm.usage import groq_rate_limit_hits, record_groq_call, record_groq_rate_limit
 
 
 def _is_rate_limit(err: Exception) -> bool:
@@ -54,9 +54,15 @@ def invoke_with_retry(
             last_err = e
             if _is_daily_quota_exhausted(e):
                 break
-            if not _is_rate_limit(e) or attempt >= max_retries - 1:
-                break
-            if fail_fast_rate_limit:
+            if _is_rate_limit(e):
+                record_groq_rate_limit()
+                if fail_fast_rate_limit or groq_rate_limit_hits() >= 2:
+                    break
+                if attempt >= max_retries - 1:
+                    break
+                time.sleep(min(12.0, _retry_delay(attempt, e, base_delay_s)))
+                continue
+            if attempt >= max_retries - 1:
                 break
             time.sleep(min(6.0, _retry_delay(attempt, e, base_delay_s)))
     if last_err:

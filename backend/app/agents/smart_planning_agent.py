@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import time
 from typing import Any, TypedDict
 
 from langgraph.graph import END, StateGraph
@@ -10,12 +11,15 @@ from app.tools.brief_utils import brief_to_scoring_criteria
 from app.tools.brief_tool import brief_extraction_tool
 from app.tools.panel_copy_tool import enrich_recommendation_explanations
 from app.tools.rag_tool import rag_tool
+from app.llm.router import routing_label
 from app.llm.throttle import mark_agent_finished
+from app.llm.usage import get_groq_usage, reset_groq_usage
 
 
 class AgentState(TypedDict, total=False):
     message: str
     brief: dict[str, Any]
+    brief_source: str
     scoring_criteria: dict[str, Any]
     recommendation: dict[str, Any]
     rag: dict[str, Any]
@@ -23,19 +27,17 @@ class AgentState(TypedDict, total=False):
 
 
 def _brief_node(state: AgentState) -> AgentState:
-    from app.config.settings import get_settings
     from app.services.chat_service import _fallback_extract_criteria
-
-    settings = get_settings()
-    # 8b : 1 seul slot LLM économisé pour les textes panneaux (évite 429 tokens/min)
-    if "8b-instant" in (settings.groq_model or ""):
-        return {**state, "brief": _fallback_extract_criteria(state["message"])}
 
     try:
         brief_out = brief_extraction_tool(state["message"])
-        return {**state, "brief": brief_out["brief"]}
+        return {**state, "brief": brief_out["brief"], "brief_source": "llm_8b"}
     except Exception:
-        return {**state, "brief": _fallback_extract_criteria(state["message"])}
+        return {
+            **state,
+            "brief": _fallback_extract_criteria(state["message"]),
+            "brief_source": "heuristic_fallback",
+        }
 
 
 def _recommendation_node(state: AgentState) -> AgentState:
@@ -44,10 +46,6 @@ def _recommendation_node(state: AgentState) -> AgentState:
         state.get("message") or "",
     )
     rec = recommend_panels(criteria)
-    return {**state, "recommendation": rec, "scoring_criteria": criteria}
-
-
-def _rag_node(state: AgentState) -> AgentState:
     brief = state.get("brief") or {}
     q = (
         "Règles métier DOOH premium et contraintes planning. "
@@ -55,10 +53,10 @@ def _rag_node(state: AgentState) -> AgentState:
         f"objective={brief.get('objective')}, poi={brief.get('poi')}."
     )
     try:
-        rag = rag_tool(q, k=4)
+        rag = rag_tool(q, k=3, summarize=False)
     except Exception:
-        rag = {"query": q, "k": 4, "matches": [], "error": "rag_unavailable"}
-    return {**state, "rag": rag}
+        rag = {"query": q, "k": 3, "matches": [], "error": "rag_unavailable"}
+    return {**state, "recommendation": rec, "scoring_criteria": criteria, "rag": rag}
 
 
 def _panel_copy_node(state: AgentState) -> AgentState:
@@ -72,6 +70,7 @@ def _panel_copy_node(state: AgentState) -> AgentState:
             state.get("brief") or {},
             matches,
             rec,
+            rag_summary=(rag.get("summary") if isinstance(rag, dict) else None),
         )
         return {**state, "recommendation": new_rec, "panel_copy_ok": ok}
     except Exception:
@@ -82,13 +81,11 @@ def build_agent():
     g = StateGraph(AgentState)
     g.add_node("brief", _brief_node)
     g.add_node("recommendation", _recommendation_node)
-    g.add_node("rag", _rag_node)
     g.add_node("panel_copy", _panel_copy_node)
 
     g.set_entry_point("brief")
     g.add_edge("brief", "recommendation")
-    g.add_edge("recommendation", "rag")
-    g.add_edge("rag", "panel_copy")
+    g.add_edge("recommendation", "panel_copy")
     g.add_edge("panel_copy", END)
     return g.compile()
 
@@ -97,12 +94,15 @@ AGENT = build_agent()
 
 
 def run_agent(message: str) -> dict[str, Any]:
+    reset_groq_usage()
+    started = time.time()
     try:
         ingest_rag_docs()
     except Exception:
         pass
 
     out = AGENT.invoke({"message": message})
+    total_s = round(time.time() - started, 1)
     brief = out.get("brief") or {}
     criteria = out.get("scoring_criteria") or brief
     from app.config.settings import get_settings
@@ -122,12 +122,28 @@ def run_agent(message: str) -> dict[str, Any]:
         else ("llm_groq_partial" if partial else "llm_unavailable")
     )
 
+    routes = routing_label(settings)
+    panel_model = rec.get("groq_panel_primary_model") or settings.groq_model_fast
+    groq_usage = get_groq_usage()
+
     meta: dict[str, Any] = {
         "llm_used": True,
         "llm_provider": provider,
-        "groq_model": settings.groq_model,
-        "brief_source": (
-            "heuristic" if "8b-instant" in (settings.groq_model or "") else "llm"
+        "groq_routing": routes,
+        "groq_model": panel_model,
+        "groq_model_fast": settings.groq_model_fast,
+        "brief_source": out.get("brief_source") or "llm_8b",
+        "rag_model": routes["rag"],
+        "panel_copy_model": panel_model,
+        "panel_explanations_8b": llm_expl_count,
+        "groq_api_calls": groq_usage.get("groq_api_calls", 0),
+        "groq_rate_limit_hits": groq_usage.get("groq_rate_limit_hits", 0),
+        "duration_total_sec": total_s,
+        "duration_panel_copy_sec": rec.get("panel_copy_duration_s"),
+        "latency_note": (
+            f"~{total_s}s — tout en {settings.groq_model_fast} "
+            f"({llm_expl_count}/{llm_target} textes). "
+            f"{groq_usage.get('groq_api_calls', 0)} appels Groq."
         ),
         "recommendation_source": "scoring_engine",
         "explanation_source": expl_src,
@@ -140,20 +156,22 @@ def run_agent(message: str) -> dict[str, Any]:
     if partial:
         meta["panel_copy_partial"] = True
         meta["hint"] = (
-            f"Groq ({settings.groq_model}) : {llm_expl_count}/{llm_target} textes IA — "
-            "relancez la génération pour compléter (mode LLM uniquement, pas de texte modèle)."
+            f"{llm_expl_count}/{llm_target} textes ({panel_model}). "
+            "Relancez après 1 min si quota Groq (429)."
         )
+    elif llm_target > 0 and llm_expl_count >= llm_target:
+        meta["hint"] = f"Plan complet {llm_target}/{llm_target} — {panel_model}."
     elif llm_expl_count == 0 and llm_target > 0:
+        calls = groq_usage.get("groq_api_calls", 0)
         meta["hint"] = (
-            f"Aucun texte généré par {settings.groq_model} (quota journalier Groq souvent épuisé). "
-            "Les panneaux sont scorés mais les justifications restent vides tant que l'IA ne répond pas. "
-            "Réessayez après reset quota (~2 h) ou tier Dev : console.groq.com/settings/billing"
+            f"Aucun texte ({panel_model}). Appels Groq : {calls}. "
+            "Quota saturé — attendez 2 min puis relancez."
         )
 
-    msg_ok = "Plan média prêt — justifications panneaux rédigées par Groq (llama-3.1-8b-instant)."
+    msg_ok = f"Plan média prêt — {llm_target} textes en {settings.groq_model_fast}."
     msg_partial = (
-        f"Plan média prêt — {llm_expl_count}/{llm_target} textes Groq. "
-        "Attendez 1 min avant de relancer pour compléter (limite tokens/min Groq)."
+        f"Plan média — {llm_expl_count}/{llm_target} textes ({settings.groq_model_fast}). "
+        "Relancez après 1 min si besoin."
     )
 
     mark_agent_finished()

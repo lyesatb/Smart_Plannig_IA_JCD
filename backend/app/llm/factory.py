@@ -9,6 +9,7 @@ from langchain_core.language_models.chat_models import BaseChatModel
 from langchain_openai import ChatOpenAI
 
 from app.config.settings import Settings
+from app.llm.router import GroqTask, model_for_task
 
 
 GROQ_OPENAI_COMPAT_BASE = "https://api.groq.com/openai/v1"
@@ -23,6 +24,8 @@ def _http_client(settings: Settings) -> httpx.Client:
 def get_chat_llm(
     settings: Settings,
     *,
+    task: GroqTask | str | None = None,
+    model: str | None = None,
     temperature: float | None = None,
     creative_copy: bool = False,
     factual_copy: bool = False,
@@ -30,10 +33,14 @@ def get_chat_llm(
 ) -> BaseChatModel:
     """Groq (OpenAI-compatible) or OpenAI chat model.
 
-    planner_copy: justifications plan média (stratégie, pas lecture KPI).
-    factual_copy: faits ville/POI stricts.
-    creative_copy: température plus haute (legacy).
+    task: extraction | rag | reasoning_final → 8B (GROQ_MODEL_FAST).
+    model: force un modèle Groq si besoin.
+    planner_copy: justifications plan média (8B).
     """
+    if task is None and planner_copy:
+        task = GroqTask.REASONING_FINAL
+    if isinstance(task, str):
+        task = GroqTask(task)
     max_tokens: int | None = None
     if planner_copy:
         temp = 0.55
@@ -48,8 +55,9 @@ def get_chat_llm(
     http_client = _http_client(settings)
 
     if settings.groq_api_key:
+        groq_model = model or (model_for_task(settings, task) if task else settings.groq_model_fast)
         groq_kw: dict = {
-            "model": settings.groq_model,
+            "model": groq_model,
             "api_key": settings.groq_api_key,
             "base_url": settings.groq_base_url or GROQ_OPENAI_COMPAT_BASE,
             "temperature": temp,

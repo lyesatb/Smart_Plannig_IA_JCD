@@ -7,11 +7,12 @@ import httpx
 
 from app.config.settings import get_settings
 from app.services.recommendation_service import recommend_panels, get_kpis, get_panels_preview
-from app.services.export_service import build_scoring_pool_excel
+from app.services.export_service import build_eligible_parc_excel, build_plan_excel
 from app.services.chat_service import handle_chat
 from app.rag.ingest import ingest_rag_docs
 from app.tools.rag_tool import rag_tool
 from app.llm.factory import get_chat_llm
+from app.llm.router import GroqTask, probe_groq_model, routing_label
 
 router = APIRouter()
 
@@ -55,6 +56,10 @@ def health_llm():
         out["error"] = "no_api_key"
         return out
 
+    out["api_key_configured"] = bool(settings.groq_api_key)
+    out["probe_8b"] = probe_groq_model(settings, settings.groq_model_fast)
+    out["probe_70b"] = probe_groq_model(settings, settings.groq_model_quality)
+
     verify = not settings.llm_skip_ssl_verify
     try:
         r = httpx.get(
@@ -68,7 +73,7 @@ def health_llm():
         return out
 
     try:
-        llm = get_chat_llm(settings)
+        llm = get_chat_llm(settings, task=GroqTask.EXTRACTION)
         resp = llm.invoke("Réponds uniquement par le mot OK.")
         text = (getattr(resp, "content", None) or str(resp)).strip()
         out["groq_chat_ok"] = len(text) > 0
@@ -95,21 +100,36 @@ def chat(req: ChatRequest):
     return handle_chat(req.message)
 
 
-@router.post("/export/scoring-pool")
-def export_scoring_pool(req: ExportScoringPoolRequest):
-    """
-    Pool scoring en Excel. Justification remplie seulement si retenu_plan_media = Oui.
-    """
+@router.post("/export/plan-retenu")
+def export_plan_retenu(req: ExportScoringPoolRequest):
+    """Excel : uniquement les panneaux du plan affiché (carte), avec justifications IA."""
     data = req.model_dump(exclude_none=True)
     explanations = data.pop("recommendation_explanations", None) or {}
-    buf = build_scoring_pool_excel(data, explanations)
+    buf = build_plan_excel(data, explanations)
     return StreamingResponse(
         buf,
         media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-        headers={
-            "Content-Disposition": 'attachment; filename="pool_scoring_jcdecaux.xlsx"',
-        },
+        headers={"Content-Disposition": 'attachment; filename="plan_retenu_jcdecaux.xlsx"'},
     )
+
+
+@router.post("/export/parc-eligible")
+def export_parc_eligible(req: ExportScoringPoolRequest):
+    """Excel : tout le parc éligible après filtres brief."""
+    data = req.model_dump(exclude_none=True)
+    explanations = data.pop("recommendation_explanations", None) or {}
+    buf = build_eligible_parc_excel(data, explanations)
+    return StreamingResponse(
+        buf,
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers={"Content-Disposition": 'attachment; filename="parc_eligible_jcdecaux.xlsx"'},
+    )
+
+
+@router.post("/export/scoring-pool")
+def export_scoring_pool(req: ExportScoringPoolRequest):
+    """Alias rétrocompat : export parc éligible complet."""
+    return export_parc_eligible(req)
 
 @router.post("/rag/ingest")
 def rag_ingest():

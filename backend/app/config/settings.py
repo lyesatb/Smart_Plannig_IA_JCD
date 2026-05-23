@@ -9,7 +9,9 @@ from dataclasses import dataclass
 class Settings:
     # Groq (OpenAI-compatible chat API)
     groq_api_key: str | None
-    groq_model: str
+    groq_model: str  # rétrocompat = modèle rapide
+    groq_model_fast: str
+    groq_model_quality: str
     groq_base_url: str
 
     # OpenAI (optional paid LLM / embeddings)
@@ -83,15 +85,21 @@ def _normalize_groq_model(name: str) -> str:
     return GROQ_MODEL_ALIASES.get(n, n)
 
 
-def _resolve_groq_model() -> str:
-    explicit = (os.getenv("GROQ_MODEL") or "").strip()
+def _resolve_groq_model_fast() -> str:
+    explicit = (os.getenv("GROQ_MODEL_FAST") or os.getenv("GROQ_MODEL") or "").strip()
     if explicit:
         return _normalize_groq_model(explicit)
-    # Rétrocompat : OPENAI_MODEL=llama-3.1-70b-versatile sur Groq
-    oai = (os.getenv("OPENAI_MODEL") or "").strip()
-    if oai and any(x in oai.lower() for x in ("llama", "mixtral", "gemma", "qwen")):
-        return _normalize_groq_model(oai)
     return "llama-3.1-8b-instant"
+
+
+def _resolve_groq_model_quality() -> str:
+    explicit = (os.getenv("GROQ_MODEL_QUALITY") or "").strip()
+    if explicit:
+        return _normalize_groq_model(explicit)
+    legacy = (os.getenv("GROQ_MODEL") or "").strip()
+    if legacy and "70" in legacy:
+        return _normalize_groq_model(legacy)
+    return "llama-3.3-70b-versatile"
 
 
 def get_settings() -> Settings:
@@ -116,9 +124,14 @@ def get_settings() -> Settings:
         # auto: OpenAI embeddings only if paid OpenAI key is set; else free local HF
         embedding_backend = "openai" if openai else "huggingface"
 
+    groq_fast = _resolve_groq_model_fast()
+    groq_quality = _resolve_groq_model_quality()
+
     return Settings(
         groq_api_key=groq,
-        groq_model=_resolve_groq_model(),
+        groq_model=groq_fast,
+        groq_model_fast=groq_fast,
+        groq_model_quality=groq_quality,
         groq_base_url=(os.getenv("GROQ_BASE_URL") or "https://api.groq.com/openai/v1").strip(),
         openai_api_key=openai,
         openai_model=os.getenv("OPENAI_MODEL", "gpt-4o-mini").strip(),
