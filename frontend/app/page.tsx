@@ -102,7 +102,6 @@ export default function Home() {
             <h1 className="text-4xl md:text-6xl font-bold">
               Smart Planning IA
               <span className="block text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 to-blue-500">
-                JCDecaux x Carrefour x Carmila
               </span>
             </h1>
             <p className="text-gray-300 mt-4 max-w-3xl">
