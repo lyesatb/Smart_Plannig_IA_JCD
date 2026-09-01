@@ -163,194 +163,222 @@ export default function Home() {
     }
   }
 
-  return (
-    <main className="min-h-screen bg-gradient-to-br from-[#05060a] via-[#101827] to-[#111827] text-white p-6">
-      <section className="max-w-7xl mx-auto">
-        <div className="flex items-center justify-between mb-8">
-          <div>
-            <div className="flex items-center gap-3 text-cyan-300 mb-2">
+  const showDashboard = !!lastAnswer;
+
+  const chatPanel = (
+    <div className="glass rounded-3xl p-6 flex flex-col w-full">
+      <div className="flex items-center justify-between mb-4">
+        <h2 className="text-xl font-semibold flex items-center gap-2">
+          <Sparkles className="text-cyan-300" /> Assistant IA
+        </h2>
+        {messages.length > 0 && (
+          <button
+            onClick={resetConversation}
+            className="text-xs text-gray-400 hover:text-cyan-300 flex items-center gap-1"
+          >
+            <RotateCcw size={14} /> Nouvelle discussion
+          </button>
+        )}
+      </div>
+
+      {messages.length > 0 && (
+        <div
+          ref={threadRef}
+          className="flex-1 overflow-auto space-y-3 mb-4 pr-1 min-h-[160px] max-h-[440px]"
+        >
+          {messages.map((m) => (
+            <ChatBubble key={m.id} role={m.role} content={m.content} />
+          ))}
+
+          {loading && (
+            <div className="flex items-center gap-2 text-sm text-cyan-200/80">
+              <Bot size={16} className="shrink-0" />
+              <span className="inline-flex gap-1">
+                <Dot /> <Dot /> <Dot />
+              </span>
+              <span className="text-gray-400">Analyse en cours…</span>
+            </div>
+          )}
+        </div>
+      )}
+
+      {messages.length === 0 && (
+        <div className="text-sm text-gray-400 space-y-4 mb-4">
+          <p className="leading-relaxed">
+            Décris ta campagne en langage naturel. Je génère un plan média, puis on l'affine
+            ensemble : tu peux répondre pour changer la ville, le budget, le POI, la cible ou le
+            nombre de panneaux (« 5 par ville »…).
+          </p>
+          <div className="space-y-2">
+            <p className="text-xs uppercase tracking-wide text-gray-500">Exemples</p>
+            {STARTER_PROMPTS.map((p) => (
+              <button
+                key={p}
+                onClick={() => send(p)}
+                className="block w-full text-left text-sm rounded-2xl border border-white/10 bg-black/30 px-3 py-2 hover:border-cyan-300/50 hover:text-white transition"
+              >
+                {p}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {messages.length > 0 && !loading && (
+        <div className="flex flex-wrap gap-2 mb-3">
+          {FOLLOWUP_PROMPTS.map((p) => (
+            <button
+              key={p}
+              onClick={() => send(p)}
+              className="text-xs rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-gray-300 hover:border-cyan-300/50 hover:text-white transition"
+            >
+              {p}
+            </button>
+          ))}
+        </div>
+      )}
+
+      <div className="rounded-2xl bg-black/40 border border-white/10 focus-within:border-cyan-400 transition">
+        <textarea
+          className="w-full h-24 rounded-2xl bg-transparent p-3 text-sm outline-none resize-none"
+          value={input}
+          onChange={(e) => setInput(e.target.value)}
+          onKeyDown={onKeyDown}
+          placeholder={
+            messages.length === 0
+              ? "Ex. Campagne premium à Paris, cible CSP+, autour des gares…"
+              : "Réponds pour affiner (ex. « plutôt à Lyon », « 5 par ville »)…"
+          }
+        />
+        <div className="flex items-center justify-between px-3 pb-3">
+          <span className="text-[11px] text-gray-500">Entrée pour envoyer · Maj+Entrée = nouvelle ligne</span>
+          <button
+            onClick={() => send()}
+            disabled={loading || !input.trim()}
+            className="bg-cyan-400 text-black font-bold py-2 px-4 rounded-xl flex items-center justify-center gap-2 hover:bg-cyan-300 disabled:opacity-60 disabled:cursor-not-allowed"
+          >
+            <Send size={16} /> {loading ? "…" : "Envoyer"}
+          </button>
+        </div>
+      </div>
+
+      {chatError && (
+        <p className="mt-3 text-sm text-amber-300 bg-amber-400/10 border border-amber-300/30 rounded-2xl p-3">
+          {chatError}
+        </p>
+      )}
+
+      {lastAnswer && (
+        <div className="mt-6 text-sm text-gray-300">
+          {lastAnswer.meta && <EngineMeta meta={lastAnswer.meta} />}
+          <details className="rounded-xl border border-white/10 bg-black/25 text-xs">
+            <summary className="cursor-pointer list-none px-3 py-2.5 text-white font-semibold select-none">
+              Critères extraits
+            </summary>
+            <pre className="bg-black/40 rounded-b-2xl p-4 overflow-auto text-cyan-100">
+              {JSON.stringify(lastAnswer.extracted_criteria, null, 2)}
+            </pre>
+          </details>
+        </div>
+      )}
+    </div>
+  );
+
+  const recommendationsPanel = (
+    <div className="glass rounded-3xl p-6 h-full">
+      <h2 className="text-xl font-semibold flex items-center gap-2 mb-4">
+        <Target className="text-cyan-300" /> Recommandations IA
+      </h2>
+
+      {!lastAnswer && (
+        <div className="h-96 flex items-center justify-center text-gray-400 border border-dashed border-white/20 rounded-3xl text-center px-6">
+          {loading ? "Génération du plan média en cours…" : "Le plan média s'affichera ici."}
+        </div>
+      )}
+
+      {lastAnswer && (
+        <>
+          <div className="mb-4 p-4 rounded-2xl bg-cyan-400/10 border border-cyan-300/20 text-cyan-100">
+            {lastAnswer.recommendation.summary}
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-h-[620px] overflow-auto pr-2">
+            {panels.map((p) => (
+              <div key={p.panel_id} className="rounded-2xl bg-black/35 border border-white/10 p-4 hover:border-cyan-300/50 transition">
+                <div className="flex justify-between items-start">
+                  <div>
+                    <p className="font-bold">{p.city} — {p.district}</p>
+                    <p className="text-xs text-gray-400">{p.format} · POI : {p.poi_nearby}</p>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-2xl font-bold text-cyan-300">{p.smart_score}</p>
+                    <p className="text-xs text-gray-400">score</p>
+                  </div>
+                </div>
+                <div className="grid grid-cols-3 gap-2 my-4 text-xs">
+                  <Mini label="Trafic" value={p.daily_traffic.toLocaleString()} />
+                  <Mini label="CSP+" value={Math.round(p.audience_csp_plus) + "%"} />
+                  <Mini label="Visibilité" value={Math.round(p.visibility_score) + "%"} />
+                </div>
+                {p.explanation?.trim() ? (
+                  <p className="text-sm text-gray-300 leading-relaxed">{p.explanation}</p>
+                ) : null}
+              </div>
+            ))}
+          </div>
+        </>
+      )}
+    </div>
+  );
+
+  // Écran d'accueil façon ChatGPT : uniquement le chat, centré, tant qu'aucun plan n'existe.
+  if (!showDashboard) {
+    return (
+      <main className="min-h-screen bg-gradient-to-br from-[#05060a] via-[#101827] to-[#111827] text-white p-6">
+        <section className="max-w-3xl mx-auto min-h-[calc(100vh-3rem)] flex flex-col justify-center gap-8">
+          <div className="text-center">
+            <div className="flex items-center justify-center gap-3 text-cyan-300 mb-3">
               <Sparkles size={22} />
               <span className="uppercase tracking-[0.25em] text-xs">Retail Media Intelligence</span>
             </div>
             <h1 className="text-4xl md:text-6xl font-bold">
               Smart Planning IA
-              <span className="block text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 to-blue-500">
-              </span>
             </h1>
-            <p className="text-gray-300 mt-4 max-w-3xl">
-              Plateforme de recommandation intelligente pour sélectionner les meilleurs panneaux DOOH selon la data, l'audience, la disponibilité et les objectifs de campagne.
+            <p className="text-gray-300 mt-4 max-w-2xl mx-auto">
+              Décris ta campagne en langage naturel : l'assistant IA génère un plan média DOOH,
+              puis tu l'affines en discutant. Le plan et la carte apparaissent dès ta première demande.
             </p>
+          </div>
+          {chatPanel}
+        </section>
+      </main>
+    );
+  }
+
+  // Tableau de bord complet, une fois qu'un plan est généré.
+  return (
+    <main className="min-h-screen bg-gradient-to-br from-[#05060a] via-[#101827] to-[#111827] text-white p-6">
+      <section className="max-w-7xl mx-auto">
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center gap-3">
+            <Sparkles className="text-cyan-300" size={26} />
+            <div>
+              <h1 className="text-2xl md:text-3xl font-bold leading-tight">Smart Planning IA</h1>
+              <p className="text-[11px] text-gray-400 uppercase tracking-[0.2em]">Retail Media Intelligence</p>
+            </div>
           </div>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-          <Kpi icon={<Monitor />} label={dynamicKpis.k1Label} value={lastAnswer ? dynamicKpis.k1Value : (kpisLoading ? "…" : dynamicKpis.k1Value)} />
-          <Kpi icon={<Zap />} label={dynamicKpis.k2Label} value={lastAnswer ? dynamicKpis.k2Value : (kpisLoading ? "…" : dynamicKpis.k2Value)} />
-          <Kpi icon={<MapPin />} label={dynamicKpis.k3Label} value={lastAnswer ? dynamicKpis.k3Value : (kpisLoading ? "…" : dynamicKpis.k3Value)} />
-          <Kpi icon={<BarChart3 />} label={dynamicKpis.k4Label} value={lastAnswer ? dynamicKpis.k4Value : (kpisLoading ? "…" : dynamicKpis.k4Value)} />
+          <Kpi icon={<Monitor />} label={dynamicKpis.k1Label} value={dynamicKpis.k1Value} />
+          <Kpi icon={<Zap />} label={dynamicKpis.k2Label} value={dynamicKpis.k2Value} />
+          <Kpi icon={<MapPin />} label={dynamicKpis.k3Label} value={dynamicKpis.k3Value} />
+          <Kpi icon={<BarChart3 />} label={dynamicKpis.k4Label} value={dynamicKpis.k4Value} />
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="glass rounded-3xl p-6 lg:col-span-1 flex flex-col">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-semibold flex items-center gap-2">
-                <Sparkles className="text-cyan-300" /> Assistant IA
-              </h2>
-              {messages.length > 0 && (
-                <button
-                  onClick={resetConversation}
-                  className="text-xs text-gray-400 hover:text-cyan-300 flex items-center gap-1"
-                >
-                  <RotateCcw size={14} /> Nouvelle discussion
-                </button>
-              )}
-            </div>
-
-            <div
-              ref={threadRef}
-              className="flex-1 overflow-auto space-y-3 mb-4 pr-1 min-h-[220px] max-h-[440px]"
-            >
-              {messages.length === 0 && (
-                <div className="text-sm text-gray-400 space-y-4">
-                  <p className="leading-relaxed">
-                    Décris ta campagne en langage naturel. Je génère un plan média, puis on
-                    l'affine ensemble : tu peux répondre pour changer la ville, le budget, le POI
-                    ou le nombre de panneaux.
-                  </p>
-                  <div className="space-y-2">
-                    <p className="text-xs uppercase tracking-wide text-gray-500">Exemples</p>
-                    {STARTER_PROMPTS.map((p) => (
-                      <button
-                        key={p}
-                        onClick={() => send(p)}
-                        className="block w-full text-left text-sm rounded-2xl border border-white/10 bg-black/30 px-3 py-2 hover:border-cyan-300/50 hover:text-white transition"
-                      >
-                        {p}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {messages.map((m) => (
-                <ChatBubble key={m.id} role={m.role} content={m.content} />
-              ))}
-
-              {loading && (
-                <div className="flex items-center gap-2 text-sm text-cyan-200/80">
-                  <Bot size={16} className="shrink-0" />
-                  <span className="inline-flex gap-1">
-                    <Dot /> <Dot /> <Dot />
-                  </span>
-                  <span className="text-gray-400">Analyse en cours…</span>
-                </div>
-              )}
-            </div>
-
-            {messages.length > 0 && !loading && (
-              <div className="flex flex-wrap gap-2 mb-3">
-                {FOLLOWUP_PROMPTS.map((p) => (
-                  <button
-                    key={p}
-                    onClick={() => send(p)}
-                    className="text-xs rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-gray-300 hover:border-cyan-300/50 hover:text-white transition"
-                  >
-                    {p}
-                  </button>
-                ))}
-              </div>
-            )}
-
-            <div className="rounded-2xl bg-black/40 border border-white/10 focus-within:border-cyan-400 transition">
-              <textarea
-                className="w-full h-24 rounded-2xl bg-transparent p-3 text-sm outline-none resize-none"
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                onKeyDown={onKeyDown}
-                placeholder={
-                  messages.length === 0
-                    ? "Ex. Campagne premium à Paris, cible CSP+, autour des gares…"
-                    : "Réponds pour affiner (ex. « plutôt à Lyon », « plus de panneaux »)…"
-                }
-              />
-              <div className="flex items-center justify-between px-3 pb-3">
-                <span className="text-[11px] text-gray-500">Entrée pour envoyer · Maj+Entrée = nouvelle ligne</span>
-                <button
-                  onClick={() => send()}
-                  disabled={loading || !input.trim()}
-                  className="bg-cyan-400 text-black font-bold py-2 px-4 rounded-xl flex items-center justify-center gap-2 hover:bg-cyan-300 disabled:opacity-60 disabled:cursor-not-allowed"
-                >
-                  <Send size={16} /> {loading ? "…" : "Envoyer"}
-                </button>
-              </div>
-            </div>
-
-            {chatError && (
-              <p className="mt-3 text-sm text-amber-300 bg-amber-400/10 border border-amber-300/30 rounded-2xl p-3">
-                {chatError}
-              </p>
-            )}
-
-            {lastAnswer && (
-              <div className="mt-6 text-sm text-gray-300">
-                {lastAnswer.meta && <EngineMeta meta={lastAnswer.meta} />}
-                <details className="rounded-xl border border-white/10 bg-black/25 text-xs">
-                  <summary className="cursor-pointer list-none px-3 py-2.5 text-white font-semibold select-none">
-                    Critères extraits
-                  </summary>
-                  <pre className="bg-black/40 rounded-b-2xl p-4 overflow-auto text-cyan-100">
-                    {JSON.stringify(lastAnswer.extracted_criteria, null, 2)}
-                  </pre>
-                </details>
-              </div>
-            )}
-          </div>
-
-          <div className="glass rounded-3xl p-6 lg:col-span-2">
-            <h2 className="text-xl font-semibold flex items-center gap-2 mb-4">
-              <Target className="text-cyan-300" /> Recommandations IA
-            </h2>
-
-            {!lastAnswer && (
-              <div className="h-96 flex items-center justify-center text-gray-400 border border-dashed border-white/20 rounded-3xl text-center px-6">
-                Lance une demande dans l'assistant pour générer un plan média intelligent, puis
-                discute avec l'IA pour l'ajuster.
-              </div>
-            )}
-
-            {lastAnswer && (
-              <>
-                <div className="mb-4 p-4 rounded-2xl bg-cyan-400/10 border border-cyan-300/20 text-cyan-100">
-                  {lastAnswer.recommendation.summary}
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-h-[620px] overflow-auto pr-2">
-                  {panels.map((p) => (
-                    <div key={p.panel_id} className="rounded-2xl bg-black/35 border border-white/10 p-4 hover:border-cyan-300/50 transition">
-                      <div className="flex justify-between items-start">
-                        <div>
-                          <p className="font-bold">{p.city} — {p.district}</p>
-                          <p className="text-xs text-gray-400">{p.format} · POI : {p.poi_nearby}</p>
-                        </div>
-                        <div className="text-right">
-                          <p className="text-2xl font-bold text-cyan-300">{p.smart_score}</p>
-                          <p className="text-xs text-gray-400">score</p>
-                        </div>
-                      </div>
-                      <div className="grid grid-cols-3 gap-2 my-4 text-xs">
-                        <Mini label="Trafic" value={p.daily_traffic.toLocaleString()} />
-                        <Mini label="CSP+" value={Math.round(p.audience_csp_plus) + "%"} />
-                        <Mini label="Visibilité" value={Math.round(p.visibility_score) + "%"} />
-                      </div>
-                      {p.explanation?.trim() ? (
-                        <p className="text-sm text-gray-300 leading-relaxed">{p.explanation}</p>
-                      ) : null}
-                    </div>
-                  ))}
-                </div>
-              </>
-            )}
-          </div>
+          <div className="lg:col-span-1">{chatPanel}</div>
+          <div className="lg:col-span-2">{recommendationsPanel}</div>
         </div>
 
         <div className="glass rounded-3xl p-6 mt-6">
