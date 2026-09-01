@@ -1,7 +1,7 @@
 'use client';
 
-import { useEffect, useState } from "react";
-import { MapPin, Sparkles, BarChart3, Send, Monitor, Target, Zap } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { MapPin, Sparkles, BarChart3, Send, Monitor, Target, Zap, RotateCcw, User, Bot } from "lucide-react";
 import dynamic from "next/dynamic";
 
 const MapView = dynamic(
@@ -28,14 +28,43 @@ type Panel = {
   explanation?: string;
 };
 
+type ChatMessage = {
+  id: string;
+  role: "user" | "assistant";
+  content: string;
+  answer?: any;
+};
+
+const STARTER_PROMPTS = [
+  "Je veux une campagne premium à Paris pour une cible CSP+ autour des gares",
+  "Trouve-moi les meilleurs panneaux digitaux à Lyon pour une campagne food premium",
+  "Je veux maximiser la couverture à Marseille pour une campagne jeunes actifs",
+];
+
+const FOLLOWUP_PROMPTS = [
+  "Plutôt à Lyon finalement",
+  "Augmente le budget à 300k",
+  "Je veux plus de panneaux",
+  "Cible jeunes actifs à la place",
+];
+
+function newId() {
+  try {
+    return crypto.randomUUID();
+  } catch {
+    return `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+  }
+}
+
 export default function Home() {
   const [kpis, setKpis] = useState<any>(null);
-  const [message, setMessage] = useState("Je veux une campagne premium à Paris pour une cible CSP+ autour des gares");
-  const [answer, setAnswer] = useState<any>(null);
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [input, setInput] = useState(STARTER_PROMPTS[0]);
   const [loading, setLoading] = useState(false);
   const [chatError, setChatError] = useState<string | null>(null);
   const [kpisLoading, setKpisLoading] = useState(true);
   const [apiBase, setApiBase] = useState<string | null>(null);
+  const threadRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     getApiBase().then(setApiBase);
@@ -51,35 +80,62 @@ export default function Home() {
       .finally(() => setKpisLoading(false));
   }, [apiBase]);
 
-  async function send() {
+  useEffect(() => {
+    const el = threadRef.current;
+    if (el) el.scrollTop = el.scrollHeight;
+  }, [messages, loading]);
+
+  const lastAnswer =
+    [...messages].reverse().find((m) => m.role === "assistant" && m.answer)?.answer ?? null;
+  const panels: Panel[] = lastAnswer?.recommendation?.results || [];
+  const dynamicKpis = buildDynamicKpis(kpis, lastAnswer);
+
+  async function send(text?: string) {
+    const content = (text ?? input).trim();
+    if (!content || loading) return;
     if (!apiBase) {
       setChatError(
-        "API non configurée. Sur Vercel : variable API_URL = URL Railway (https://...), puis Redeploy."
+        "API non configurée. Backend local attendu sur http://localhost:8000 (lancez uvicorn), ou définissez API_URL."
       );
       return;
     }
+
+    const history = messages.map((m) => ({ role: m.role, content: m.content }));
+    const priorCriteria = lastAnswer?.extracted_criteria ?? null;
+
+    setMessages((prev) => [...prev, { id: newId(), role: "user", content }]);
+    setInput("");
     setLoading(true);
     setChatError(null);
+
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 300000);
     try {
       const res = await fetch(`${apiBase}/chat`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message }),
+        body: JSON.stringify({ message: content, history, prior_criteria: priorCriteria }),
         signal: controller.signal,
       });
       if (!res.ok) {
         throw new Error(`HTTP ${res.status}`);
       }
       const data = await res.json();
-      setAnswer(data);
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: newId(),
+          role: "assistant",
+          content: data.assistant_message || "Plan média mis à jour.",
+          answer: data,
+        },
+      ]);
     } catch (e) {
       const err = e as Error;
       setChatError(
         err.name === "AbortError"
-          ? "Délai dépassé (5 min). Relancez une fois après 30 s — le plan partiel peut déjà s’afficher si la requête a répondu."
-          : `Impossible de joindre l’API (${apiBase}). Vercel → API_URL = URL Railway https://… puis Redeploy. Railway → ALLOWED_ORIGINS = ton URL Vercel.`
+          ? "Délai dépassé (5 min). Relancez une fois après 30 s — le plan partiel peut déjà s'afficher."
+          : `Impossible de joindre l'API (${apiBase}). Vérifiez que le backend tourne (uvicorn) et ALLOWED_ORIGINS.`
       );
     } finally {
       clearTimeout(timeout);
@@ -87,8 +143,18 @@ export default function Home() {
     }
   }
 
-  const panels: Panel[] = answer?.recommendation?.results || [];
-  const dynamicKpis = buildDynamicKpis(kpis, answer);
+  function resetConversation() {
+    setMessages([]);
+    setChatError(null);
+    setInput(STARTER_PROMPTS[0]);
+  }
+
+  function onKeyDown(e: React.KeyboardEvent<HTMLTextAreaElement>) {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      send();
+    }
+  }
 
   return (
     <main className="min-h-screen bg-gradient-to-br from-[#05060a] via-[#101827] to-[#111827] text-white p-6">
@@ -105,48 +171,130 @@ export default function Home() {
               </span>
             </h1>
             <p className="text-gray-300 mt-4 max-w-3xl">
-              Plateforme de recommandation intelligente pour sélectionner les meilleurs panneaux DOOH selon la data, l’audience, la disponibilité et les objectifs de campagne.
+              Plateforme de recommandation intelligente pour sélectionner les meilleurs panneaux DOOH selon la data, l'audience, la disponibilité et les objectifs de campagne.
             </p>
           </div>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-          <Kpi icon={<Monitor />} label={dynamicKpis.k1Label} value={answer ? dynamicKpis.k1Value : (kpisLoading ? "…" : dynamicKpis.k1Value)} />
-          <Kpi icon={<Zap />} label={dynamicKpis.k2Label} value={answer ? dynamicKpis.k2Value : (kpisLoading ? "…" : dynamicKpis.k2Value)} />
-          <Kpi icon={<MapPin />} label={dynamicKpis.k3Label} value={answer ? dynamicKpis.k3Value : (kpisLoading ? "…" : dynamicKpis.k3Value)} />
-          <Kpi icon={<BarChart3 />} label={dynamicKpis.k4Label} value={answer ? dynamicKpis.k4Value : (kpisLoading ? "…" : dynamicKpis.k4Value)} />
+          <Kpi icon={<Monitor />} label={dynamicKpis.k1Label} value={lastAnswer ? dynamicKpis.k1Value : (kpisLoading ? "…" : dynamicKpis.k1Value)} />
+          <Kpi icon={<Zap />} label={dynamicKpis.k2Label} value={lastAnswer ? dynamicKpis.k2Value : (kpisLoading ? "…" : dynamicKpis.k2Value)} />
+          <Kpi icon={<MapPin />} label={dynamicKpis.k3Label} value={lastAnswer ? dynamicKpis.k3Value : (kpisLoading ? "…" : dynamicKpis.k3Value)} />
+          <Kpi icon={<BarChart3 />} label={dynamicKpis.k4Label} value={lastAnswer ? dynamicKpis.k4Value : (kpisLoading ? "…" : dynamicKpis.k4Value)} />
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="glass rounded-3xl p-6 lg:col-span-1">
-            <h2 className="text-xl font-semibold flex items-center gap-2 mb-4">
-              <Sparkles className="text-cyan-300" /> Assistant IA
-            </h2>
-            <textarea
-              className="w-full h-36 rounded-2xl bg-black/40 border border-white/10 p-4 text-sm outline-none focus:border-cyan-400"
-              value={message}
-              onChange={(e) => setMessage(e.target.value)}
-            />
-            <button
-              onClick={send}
-              disabled={loading}
-              className="mt-4 w-full bg-cyan-400 text-black font-bold py-3 rounded-2xl flex items-center justify-center gap-2 hover:bg-cyan-300 disabled:opacity-60 disabled:cursor-wait"
+          <div className="glass rounded-3xl p-6 lg:col-span-1 flex flex-col">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-semibold flex items-center gap-2">
+                <Sparkles className="text-cyan-300" /> Assistant IA
+              </h2>
+              {messages.length > 0 && (
+                <button
+                  onClick={resetConversation}
+                  className="text-xs text-gray-400 hover:text-cyan-300 flex items-center gap-1"
+                >
+                  <RotateCcw size={14} /> Nouvelle discussion
+                </button>
+              )}
+            </div>
+
+            <div
+              ref={threadRef}
+              className="flex-1 overflow-auto space-y-3 mb-4 pr-1 min-h-[220px] max-h-[440px]"
             >
-              <Send size={18} /> {loading ? "Analyse en cours..." : "Générer le plan média"}
-            </button>
+              {messages.length === 0 && (
+                <div className="text-sm text-gray-400 space-y-4">
+                  <p className="leading-relaxed">
+                    Décris ta campagne en langage naturel. Je génère un plan média, puis on
+                    l'affine ensemble : tu peux répondre pour changer la ville, le budget, le POI
+                    ou le nombre de panneaux.
+                  </p>
+                  <div className="space-y-2">
+                    <p className="text-xs uppercase tracking-wide text-gray-500">Exemples</p>
+                    {STARTER_PROMPTS.map((p) => (
+                      <button
+                        key={p}
+                        onClick={() => send(p)}
+                        className="block w-full text-left text-sm rounded-2xl border border-white/10 bg-black/30 px-3 py-2 hover:border-cyan-300/50 hover:text-white transition"
+                      >
+                        {p}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {messages.map((m) => (
+                <ChatBubble key={m.id} role={m.role} content={m.content} />
+              ))}
+
+              {loading && (
+                <div className="flex items-center gap-2 text-sm text-cyan-200/80">
+                  <Bot size={16} className="shrink-0" />
+                  <span className="inline-flex gap-1">
+                    <Dot /> <Dot /> <Dot />
+                  </span>
+                  <span className="text-gray-400">Analyse en cours…</span>
+                </div>
+              )}
+            </div>
+
+            {messages.length > 0 && !loading && (
+              <div className="flex flex-wrap gap-2 mb-3">
+                {FOLLOWUP_PROMPTS.map((p) => (
+                  <button
+                    key={p}
+                    onClick={() => send(p)}
+                    className="text-xs rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-gray-300 hover:border-cyan-300/50 hover:text-white transition"
+                  >
+                    {p}
+                  </button>
+                ))}
+              </div>
+            )}
+
+            <div className="rounded-2xl bg-black/40 border border-white/10 focus-within:border-cyan-400 transition">
+              <textarea
+                className="w-full h-24 rounded-2xl bg-transparent p-3 text-sm outline-none resize-none"
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                onKeyDown={onKeyDown}
+                placeholder={
+                  messages.length === 0
+                    ? "Ex. Campagne premium à Paris, cible CSP+, autour des gares…"
+                    : "Réponds pour affiner (ex. « plutôt à Lyon », « plus de panneaux »)…"
+                }
+              />
+              <div className="flex items-center justify-between px-3 pb-3">
+                <span className="text-[11px] text-gray-500">Entrée pour envoyer · Maj+Entrée = nouvelle ligne</span>
+                <button
+                  onClick={() => send()}
+                  disabled={loading || !input.trim()}
+                  className="bg-cyan-400 text-black font-bold py-2 px-4 rounded-xl flex items-center justify-center gap-2 hover:bg-cyan-300 disabled:opacity-60 disabled:cursor-not-allowed"
+                >
+                  <Send size={16} /> {loading ? "…" : "Envoyer"}
+                </button>
+              </div>
+            </div>
+
             {chatError && (
               <p className="mt-3 text-sm text-amber-300 bg-amber-400/10 border border-amber-300/30 rounded-2xl p-3">
                 {chatError}
               </p>
             )}
 
-            {answer && (
+            {lastAnswer && (
               <div className="mt-6 text-sm text-gray-300">
-                {answer.meta && <EngineMeta meta={answer.meta} />}
-                <p className="text-white font-semibold mb-2">Critères extraits :</p>
-                <pre className="bg-black/40 rounded-2xl p-4 overflow-auto text-cyan-100">
-                  {JSON.stringify(answer.extracted_criteria, null, 2)}
-                </pre>
+                {lastAnswer.meta && <EngineMeta meta={lastAnswer.meta} />}
+                <details className="rounded-xl border border-white/10 bg-black/25 text-xs">
+                  <summary className="cursor-pointer list-none px-3 py-2.5 text-white font-semibold select-none">
+                    Critères extraits
+                  </summary>
+                  <pre className="bg-black/40 rounded-b-2xl p-4 overflow-auto text-cyan-100">
+                    {JSON.stringify(lastAnswer.extracted_criteria, null, 2)}
+                  </pre>
+                </details>
               </div>
             )}
           </div>
@@ -156,16 +304,17 @@ export default function Home() {
               <Target className="text-cyan-300" /> Recommandations IA
             </h2>
 
-            {!answer && (
-              <div className="h-96 flex items-center justify-center text-gray-400 border border-dashed border-white/20 rounded-3xl">
-                Lance une demande pour générer un plan média intelligent.
+            {!lastAnswer && (
+              <div className="h-96 flex items-center justify-center text-gray-400 border border-dashed border-white/20 rounded-3xl text-center px-6">
+                Lance une demande dans l'assistant pour générer un plan média intelligent, puis
+                discute avec l'IA pour l'ajuster.
               </div>
             )}
 
-            {answer && (
+            {lastAnswer && (
               <>
                 <div className="mb-4 p-4 rounded-2xl bg-cyan-400/10 border border-cyan-300/20 text-cyan-100">
-                  {answer.recommendation.summary}
+                  {lastAnswer.recommendation.summary}
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-h-[620px] overflow-auto pr-2">
@@ -204,17 +353,45 @@ export default function Home() {
           <MapView panels={panels} />
         </div>
 
-        {answer?.recommendation?.analytics && apiBase && (
+        {lastAnswer?.recommendation?.analytics && apiBase && (
           <AnalyticsSection
             apiBase={apiBase}
-            analytics={answer.recommendation.analytics}
-            criteria={(answer.extracted_criteria || answer.recommendation?.criteria) as Record<string, unknown>}
+            analytics={lastAnswer.recommendation.analytics}
+            criteria={(lastAnswer.extracted_criteria || lastAnswer.recommendation?.criteria) as Record<string, unknown>}
             panels={panels}
           />
         )}
       </section>
     </main>
   );
+}
+
+function ChatBubble({ role, content }: { role: "user" | "assistant"; content: string }) {
+  const isUser = role === "user";
+  return (
+    <div className={`flex gap-2 ${isUser ? "flex-row-reverse" : "flex-row"}`}>
+      <div
+        className={`shrink-0 h-7 w-7 rounded-full flex items-center justify-center ${
+          isUser ? "bg-cyan-400 text-black" : "bg-white/10 text-cyan-200"
+        }`}
+      >
+        {isUser ? <User size={15} /> : <Bot size={15} />}
+      </div>
+      <div
+        className={`max-w-[85%] rounded-2xl px-3.5 py-2.5 text-sm leading-relaxed whitespace-pre-wrap ${
+          isUser
+            ? "bg-cyan-400/15 border border-cyan-300/25 text-cyan-50"
+            : "bg-black/35 border border-white/10 text-gray-200"
+        }`}
+      >
+        {content}
+      </div>
+    </div>
+  );
+}
+
+function Dot() {
+  return <span className="h-1.5 w-1.5 rounded-full bg-cyan-300/80 animate-pulse" />;
 }
 
 function Kpi({ icon, label, value }: any) {
