@@ -355,7 +355,7 @@ export default function Home() {
 
         <div className="glass rounded-3xl p-6 mt-6">
           <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
-            <MapPin className="text-cyan-300" /> Carte réelle (OpenStreetMap + Leaflet)
+            <MapPin className="text-cyan-300" /> Carte interactive
           </h2>
           <MapView panels={panels} />
         </div>
