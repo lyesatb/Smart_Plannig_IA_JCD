@@ -21,6 +21,8 @@ class Brief(BaseModel):
     duration_days: int = 14
     industry: str | None = None
     top_k: int | None = None
+    per_city: int | None = None
+    city_quotas: dict[str, int] | None = None
 
 
 class BriefToolOutput(BaseModel):
@@ -32,7 +34,11 @@ _SYSTEM = (
     "Ne devine pas: si une info n'est pas présente, mets null. "
     "Si plusieurs villes sont citées (Paris, Lyon, Bordeaux…), remplis cities (liste) et laisse city à null. "
     "Une seule ville → city uniquement. "
-    "top_k = nombre de panneaux (6-12) si précisé ou déduit du budget; sinon null."
+    "top_k = nombre de panneaux (6-12) si précisé ou déduit du budget; sinon null. "
+    "Nombre de panneaux PAR ville : « 5 pour chaque » / « 5 par ville » → per_city=5. "
+    "« 8 pour Lyon et 2 pour Paris » → city_quotas={\"Lyon\":8,\"Paris\":2}. "
+    "Si « pour chaque / par ville » est présent, remplis per_city (et laisse city_quotas null) : "
+    "ignore les nombres qui décrivent un PLAN PRÉCÉDENT (ex. « tu avais mis 8 pour Lyon »)."
 )
 
 _SYSTEM_CONVERSATION = (

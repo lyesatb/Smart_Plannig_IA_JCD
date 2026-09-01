@@ -239,14 +239,64 @@ def _compute_scored_frames(criteria: dict):
         + 0.05 * df["constraint_score"]
     ).round(2)
 
+    eligible = df.copy()
+
+    quota_map = _resolve_city_quotas(criteria, df)
+    if quota_map:
+        selected = _pick_by_city_quota(df, quota_map, criteria)
+        top_k = int(len(selected))
+        criteria = {**criteria, "top_k": top_k}
+        pool = df.sort_values("smart_score", ascending=False).head(max(top_k * 8, 60))
+        return eligible, pool, selected, criteria, ineligible
+
     top_k = int(criteria.get("top_k") or 12)
     top_k = max(6, min(top_k, 15))
     criteria = {**criteria, "top_k": top_k}
 
-    eligible = df.copy()
     pool = df.sort_values("smart_score", ascending=False).head(max(top_k * 8, 60))
     selected = _diversified_pick(pool, top_k, criteria)
     return eligible, pool, selected, criteria, ineligible
+
+
+def _resolve_city_quotas(criteria: dict, df: pd.DataFrame) -> dict[str, int]:
+    """Mappe ville(minuscule) -> nombre de panneaux voulu, depuis city_quotas / per_city."""
+    quotas = criteria.get("city_quotas")
+    if isinstance(quotas, dict) and quotas:
+        return {str(k).lower(): max(1, int(v)) for k, v in quotas.items() if v}
+
+    per_city = criteria.get("per_city")
+    if per_city:
+        n = max(1, int(per_city))
+        cities = criteria.get("cities")
+        if isinstance(cities, list) and cities:
+            targets = [str(c).lower() for c in cities if c]
+        elif criteria.get("city"):
+            targets = [str(criteria["city"]).lower()]
+        else:
+            targets = sorted(df["city"].astype(str).str.lower().unique().tolist())
+        return {c: n for c in targets}
+    return {}
+
+
+def _pick_by_city_quota(
+    df: pd.DataFrame, quota_map: dict[str, int], criteria: dict
+) -> pd.DataFrame:
+    """Sélectionne exactement N panneaux par ville (diversifiés, meilleurs scores)."""
+    parts: list[pd.DataFrame] = []
+    for city_l, n in quota_map.items():
+        if n <= 0:
+            continue
+        sub = df[df["city"].astype(str).str.lower() == city_l]
+        if sub.empty:
+            continue
+        pool_c = sub.sort_values("smart_score", ascending=False).head(max(n * 8, 40))
+        picked = _diversified_pick(
+            pool_c, n, {**criteria, "top_k": n, "cities": None, "city": city_l}
+        )
+        parts.append(picked)
+    if not parts:
+        return df.iloc[0:0]
+    return pd.concat(parts).sort_values("smart_score", ascending=False)
 
 def _max_per_city(criteria: dict | None, k: int) -> int:
     if not criteria:

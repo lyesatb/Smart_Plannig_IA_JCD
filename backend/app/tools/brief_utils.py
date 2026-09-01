@@ -19,6 +19,39 @@ def _cities_from_message(message: str) -> list[str]:
     return found
 
 
+_NB = r"(?:panneaux?|faces?|supports?|écrans?|ecrans?)?"
+_PER_CITY_RE = re.compile(
+    rf"(\d{{1,2}})\s*{_NB}\s*(?:pour|par)\s*(?:chaque(?:\s+ville)?|chacune?|ville)",
+    re.I,
+)
+
+
+def parse_panel_counts(
+    message: str,
+) -> tuple[int | None, dict[str, int] | None]:
+    """Détecte un nombre de panneaux par ville dans le message.
+
+    - « 5 pour chaque », « 5 par ville » → per_city=5
+    - « 8 pour Lyon et 2 pour Paris » → city_quotas={"Lyon":8,"Paris":2}
+    Si « pour chaque / par ville » est présent, per_city PRIME (on ignore les quotas
+    par ville, souvent des rappels de l'ancien plan comme « tu as mis 8 pour Lyon »).
+    """
+    text = message or ""
+    m = _PER_CITY_RE.search(text)
+    if m:
+        return max(1, min(15, int(m.group(1)))), None
+
+    quotas: dict[str, int] = {}
+    for name in CITY_NAMES:
+        nl = re.escape(name)
+        pm = re.search(
+            rf"(\d{{1,2}})\s*{_NB}\s*(?:pour|à|a|dans|sur|:|=)\s*{nl}\b", text, re.I
+        ) or re.search(rf"\b{nl}\s*(?::|=|->|→)?\s*(\d{{1,2}})\b", text, re.I)
+        if pm:
+            quotas[name] = max(1, min(15, int(pm.group(1))))
+    return None, (quotas or None)
+
+
 def compute_top_k(brief: dict[str, Any], message: str = "") -> int:
     """Nombre de panneaux selon budget / objectif / couverture (évite top_k=20 fixe)."""
     budget = brief.get("budget")
@@ -75,5 +108,21 @@ def brief_to_scoring_criteria(brief: dict[str, Any], message: str = "") -> dict[
         if m:
             val = int(m.group(1))
             c["budget"] = val * 1000 if "k" in m.group(0).lower() else val
+
+    # Nombre de panneaux par ville (« 5 pour chaque », « 8 pour Lyon et 2 pour Paris »)
+    # Le dernier message prime toujours sur les valeurs héritées du tour précédent.
+    per_city, quotas = parse_panel_counts(message)
+    if per_city:
+        c["per_city"] = per_city
+        c["city_quotas"] = None
+    elif quotas:
+        c["city_quotas"] = quotas
+        c["per_city"] = None
+        keys = list(quotas.keys())
+        if len(keys) >= 2:
+            c["cities"] = keys
+            c["city"] = None
+        elif len(keys) == 1 and not c.get("cities"):
+            c["city"] = keys[0]
 
     return c

@@ -12,7 +12,10 @@ from app.services.recommendation_service import recommend_panels
 from app.tools.brief_utils import brief_to_scoring_criteria
 
 
-PLAN_KEYS = ("city", "cities", "target", "industry", "poi", "objective", "budget", "top_k")
+PLAN_KEYS = (
+    "city", "cities", "target", "industry", "poi", "objective", "budget",
+    "top_k", "per_city", "city_quotas",
+)
 
 
 CITY_LIST = ["Paris", "Lyon", "Marseille", "Lille", "Bordeaux", "Toulouse", "Nantes"]
@@ -102,6 +105,10 @@ def _refine_followup(criteria: dict[str, Any], message: str) -> dict[str, Any]:
     elif "famille" in lower:
         criteria["target"] = "familles"
 
+    # Nombre par ville prioritaire → on ne touche pas au top_k global
+    if criteria.get("per_city") or criteria.get("city_quotas"):
+        return criteria
+
     # Nombre de panneaux explicite ("15 panneaux", "top 12")
     m = re.search(r"(\d{1,2})\s*(?:panneaux|faces|écrans|ecrans|supports)", lower)
     if not m:
@@ -151,6 +158,12 @@ def _criteria_summary(c: dict[str, Any]) -> str:
     budget = _fmt_budget(c.get("budget"))
     if budget:
         bits.append("budget " + budget)
+    if c.get("city_quotas"):
+        bits.append(
+            "répartition " + ", ".join(f"{k}: {v}" for k, v in c["city_quotas"].items())
+        )
+    elif c.get("per_city"):
+        bits.append(f"{c['per_city']} panneaux/ville")
     return ", ".join(bits) if bits else "critères par défaut"
 
 
@@ -168,14 +181,18 @@ def _criteria_diff(
         ("objective", "objectif"),
         ("budget", "budget"),
         ("top_k", "nombre de panneaux"),
+        ("per_city", "panneaux par ville"),
+        ("city_quotas", "répartition par ville"),
     ]
     changes: list[str] = []
     for key, label in labels:
         pv, cv = prior.get(key), current.get(key)
-        if pv == cv or cv in (None, "", []):
+        if _norm_val(pv) == _norm_val(cv) or cv in (None, "", [], {}):
             continue
         if key == "budget":
             cv = _fmt_budget(cv) or cv
+        elif isinstance(cv, dict):
+            cv = ", ".join(f"{k}: {v}" for k, v in cv.items())
         elif isinstance(cv, list):
             cv = ", ".join(str(x) for x in cv)
         changes.append(f"{label} → {cv}")
@@ -221,6 +238,8 @@ def build_assistant_reply(
 
 
 def _norm_val(v: Any) -> Any:
+    if isinstance(v, dict):
+        return tuple(sorted((str(k).strip().lower(), int(val)) for k, val in v.items()))
     if isinstance(v, list):
         return tuple(sorted(str(x).strip().lower() for x in v))
     if isinstance(v, str):
@@ -247,6 +266,7 @@ def _plan_stats(recommendation: dict[str, Any] | None) -> dict[str, Any] | None:
     if not results:
         return {"n": 0}
     cities = sorted({str(r.get("city")) for r in results if r.get("city")})
+    par_ville = dict(Counter(str(r.get("city")) for r in results if r.get("city")))
     poi_counts = Counter(str(r.get("poi_nearby")) for r in results if r.get("poi_nearby"))
     top_poi = poi_counts.most_common(1)[0][0] if poi_counts else None
     sample = [
@@ -264,6 +284,7 @@ def _plan_stats(recommendation: dict[str, Any] | None) -> dict[str, Any] | None:
         "score_moyen": recommendation.get("average_score"),
         "reach_estime_jour": recommendation.get("estimated_daily_reach"),
         "villes": cities,
+        "panneaux_par_ville": par_ville,
         "poi_dominant": top_poi,
         "exemples_panneaux": sample,
     }
