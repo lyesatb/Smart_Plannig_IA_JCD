@@ -32,8 +32,15 @@ class ExportScoringPoolRequest(RecommendationRequest):
     """Critères + textes IA déjà générés pour les panneaux retenus."""
     recommendation_explanations: Optional[dict[str, str]] = None
 
+class ChatTurn(BaseModel):
+    role: str
+    content: str
+
+
 class ChatRequest(BaseModel):
     message: str
+    history: Optional[list[ChatTurn]] = None
+    prior_criteria: Optional[dict] = None
 
 class RagQueryRequest(BaseModel):
     query: str
@@ -97,7 +104,8 @@ def recommendation(req: RecommendationRequest):
 
 @router.post("/chat")
 def chat(req: ChatRequest):
-    return handle_chat(req.message)
+    history = [t.model_dump() for t in (req.history or [])]
+    return handle_chat(req.message, history=history, prior_criteria=req.prior_criteria)
 
 
 @router.post("/export/plan-retenu")

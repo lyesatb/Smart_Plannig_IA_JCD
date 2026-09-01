@@ -35,14 +35,28 @@ _SYSTEM = (
     "top_k = nombre de panneaux (6-12) si précisé ou déduit du budget; sinon null."
 )
 
+_SYSTEM_CONVERSATION = (
+    "L'INPUT est une conversation : plusieurs demandes successives du même client "
+    "(de la plus ancienne à la plus récente). Déduis le brief CUMULÉ actuel. "
+    "En cas de contradiction (ex. « Paris » puis « plutôt Lyon »), la DERNIÈRE demande "
+    "prime et remplace l'ancienne valeur. Les informations non modifiées restent valables."
+)
 
-def brief_extraction_tool(message: str) -> dict[str, Any]:
+
+def brief_extraction_tool(
+    message: str,
+    latest_message: str | None = None,
+    is_conversation: bool = False,
+) -> dict[str, Any]:
+    """Extraction du brief. `message` peut être une conversation multi-tours ;
+    `latest_message` (dernier message client) sert au post-traitement heuristique."""
     settings = get_settings()
     llm = get_chat_llm(settings, task=GroqTask.EXTRACTION)
 
     schema = BriefToolOutput.model_json_schema()
+    system = f"{_SYSTEM}\n{_SYSTEM_CONVERSATION}" if is_conversation else _SYSTEM
     prompt = (
-        f"{_SYSTEM}\n\n"
+        f"{system}\n\n"
         "Retourne STRICTEMENT un JSON valide suivant ce schéma.\n"
         f"SCHEMA:\n{schema}\n\n"
         f"INPUT:\n{message}\n"
@@ -58,6 +72,6 @@ def brief_extraction_tool(message: str) -> dict[str, Any]:
         data = {"brief": data}
     out = BriefToolOutput.model_validate(data).model_dump()
     brief = out.get("brief") or {}
-    criteria = brief_to_scoring_criteria(brief, message)
+    criteria = brief_to_scoring_criteria(brief, latest_message or message)
     out["brief"] = criteria
     return out

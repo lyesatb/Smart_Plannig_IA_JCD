@@ -18,6 +18,9 @@ from app.llm.usage import get_groq_usage, reset_groq_usage
 
 class AgentState(TypedDict, total=False):
     message: str
+    conversation: str
+    is_conversation: bool
+    prior_criteria: dict[str, Any]
     brief: dict[str, Any]
     brief_source: str
     scoring_criteria: dict[str, Any]
@@ -27,15 +30,23 @@ class AgentState(TypedDict, total=False):
 
 
 def _brief_node(state: AgentState) -> AgentState:
-    from app.services.chat_service import _fallback_extract_criteria
+    from app.services.chat_service import _merge_followup_criteria
 
+    conv = state.get("conversation") or state["message"]
+    is_conv = bool(state.get("is_conversation"))
     try:
-        brief_out = brief_extraction_tool(state["message"])
+        brief_out = brief_extraction_tool(
+            conv,
+            latest_message=state["message"],
+            is_conversation=is_conv,
+        )
         return {**state, "brief": brief_out["brief"], "brief_source": "llm_8b"}
     except Exception:
         return {
             **state,
-            "brief": _fallback_extract_criteria(state["message"]),
+            "brief": _merge_followup_criteria(
+                state["message"], state.get("prior_criteria")
+            ),
             "brief_source": "heuristic_fallback",
         }
 
@@ -93,7 +104,31 @@ def build_agent():
 AGENT = build_agent()
 
 
-def run_agent(message: str) -> dict[str, Any]:
+def _build_conversation_text(
+    history: list[dict[str, Any]] | None, message: str
+) -> tuple[str, bool]:
+    """Concatène les demandes successives du client pour un brief cumulé.
+    Retourne (texte, is_conversation)."""
+    user_turns: list[str] = []
+    for turn in history or []:
+        if (turn.get("role") or "") == "user":
+            content = (turn.get("content") or "").strip()
+            if content:
+                user_turns.append(content)
+
+    if not user_turns:
+        return message, False
+
+    lines = [f"Demande {i + 1}: {t}" for i, t in enumerate(user_turns)]
+    lines.append(f"Demande {len(user_turns) + 1} (la plus récente): {message.strip()}")
+    return "\n".join(lines), True
+
+
+def run_agent(
+    message: str,
+    history: list[dict[str, Any]] | None = None,
+    prior_criteria: dict[str, Any] | None = None,
+) -> dict[str, Any]:
     reset_groq_usage()
     started = time.time()
     try:
@@ -101,7 +136,15 @@ def run_agent(message: str) -> dict[str, Any]:
     except Exception:
         pass
 
-    out = AGENT.invoke({"message": message})
+    conversation, is_conv = _build_conversation_text(history, message)
+    out = AGENT.invoke(
+        {
+            "message": message,
+            "conversation": conversation,
+            "is_conversation": is_conv,
+            "prior_criteria": prior_criteria,
+        }
+    )
     total_s = round(time.time() - started, 1)
     brief = out.get("brief") or {}
     criteria = out.get("scoring_criteria") or brief
@@ -168,16 +211,22 @@ def run_agent(message: str) -> dict[str, Any]:
             "Quota saturé — attendez 2 min puis relancez."
         )
 
-    msg_ok = f"Plan média prêt — {llm_target} textes en {settings.groq_model_fast}."
-    msg_partial = (
-        f"Plan média — {llm_expl_count}/{llm_target} textes ({settings.groq_model_fast}). "
-        "Relancez après 1 min si besoin."
+    from app.services.chat_service import build_assistant_reply
+
+    extra_note = None
+    if partial:
+        extra_note = (
+            f"J'ai rédigé {llm_expl_count}/{llm_target} justifications pour l'instant "
+            "(quota Groq) — relance dans ~1 min pour compléter."
+        )
+    assistant_message = build_assistant_reply(
+        criteria, rec, prior_criteria=prior_criteria, extra_note=extra_note
     )
 
     mark_agent_finished()
 
     return {
-        "assistant_message": msg_ok if panel_copy_ok and not partial else msg_partial,
+        "assistant_message": assistant_message,
         "extracted_criteria": criteria,
         "rag": out.get("rag"),
         "recommendation": rec,
