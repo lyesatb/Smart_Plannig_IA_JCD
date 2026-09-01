@@ -1,10 +1,18 @@
+import json
 import re
+from collections import Counter
 from typing import Any
 
 from app.agents.smart_planning_agent import run_agent
 from app.config.settings import get_settings, get_openai_env_mismatch_hint
+from app.llm.factory import get_chat_llm
+from app.llm.invoke import invoke_with_retry
+from app.llm.router import GroqTask
 from app.services.recommendation_service import recommend_panels
 from app.tools.brief_utils import brief_to_scoring_criteria
+
+
+PLAN_KEYS = ("city", "cities", "target", "industry", "poi", "objective", "budget", "top_k")
 
 
 CITY_LIST = ["Paris", "Lyon", "Marseille", "Lille", "Bordeaux", "Toulouse", "Nantes"]
@@ -210,6 +218,125 @@ def build_assistant_reply(
         "le nombre de panneaux — j'affine le plan."
     )
     return " ".join(parts)
+
+
+def _norm_val(v: Any) -> Any:
+    if isinstance(v, list):
+        return tuple(sorted(str(x).strip().lower() for x in v))
+    if isinstance(v, str):
+        return v.strip().lower()
+    return v
+
+
+def criteria_changed(
+    prior: dict[str, Any] | None, current: dict[str, Any]
+) -> bool:
+    """Le plan doit-il être régénéré ? Oui au 1er tour ou si un critère change."""
+    if not prior:
+        return True
+    for key in PLAN_KEYS:
+        if _norm_val(prior.get(key)) != _norm_val(current.get(key)):
+            return True
+    return False
+
+
+def _plan_stats(recommendation: dict[str, Any] | None) -> dict[str, Any] | None:
+    if not recommendation:
+        return None
+    results = recommendation.get("results") or []
+    if not results:
+        return {"n": 0}
+    cities = sorted({str(r.get("city")) for r in results if r.get("city")})
+    poi_counts = Counter(str(r.get("poi_nearby")) for r in results if r.get("poi_nearby"))
+    top_poi = poi_counts.most_common(1)[0][0] if poi_counts else None
+    sample = [
+        {
+            "ville": r.get("city"),
+            "quartier": r.get("district"),
+            "format": r.get("format"),
+            "poi": r.get("poi_nearby"),
+            "score": r.get("smart_score"),
+        }
+        for r in results[:3]
+    ]
+    return {
+        "n": len(results),
+        "score_moyen": recommendation.get("average_score"),
+        "reach_estime_jour": recommendation.get("estimated_daily_reach"),
+        "villes": cities,
+        "poi_dominant": top_poi,
+        "exemples_panneaux": sample,
+    }
+
+
+_REPLY_SYSTEM = (
+    "Tu es l'assistant planner média DOOH de JCDecaux (Retail Media / affichage digital). "
+    "Tu discutes en français avec un client, de façon naturelle, chaleureuse et concise "
+    "(2 à 4 phrases, sans listes à puces). "
+    "Tu l'aides à construire puis affiner son plan média de panneaux DOOH. "
+    "RÈGLE ABSOLUE : n'invente jamais de chiffres — utilise uniquement ceux du CONTEXTE. "
+    "Si 'plan_mis_a_jour' est vrai, résume brièvement le plan (villes, nombre de panneaux, "
+    "score moyen, reach) et propose une prochaine action utile (ajuster ville, budget, POI, cible…). "
+    "Sinon, réponds simplement et directement à la question du client en t'appuyant sur le CONTEXTE "
+    "(tu peux expliquer le scoring, les POI, un panneau, etc.). "
+    "Ne renvoie jamais de JSON ni de balises : uniquement ta réponse au client."
+)
+
+
+def generate_llm_reply(
+    history: list[dict[str, Any]],
+    message: str,
+    criteria: dict[str, Any],
+    recommendation: dict[str, Any] | None,
+    prior_criteria: dict[str, Any] | None = None,
+    plan_changed: bool = True,
+) -> str | None:
+    """Réponse conversationnelle générée par le LLM Groq. None si LLM indisponible."""
+    settings = get_settings()
+    if not settings.llm_enabled():
+        return None
+    try:
+        llm = get_chat_llm(settings, task=GroqTask.REASONING_FINAL, temperature=0.4)
+    except Exception:
+        return None
+
+    turns: list[str] = []
+    for turn in (history or [])[-6:]:
+        role = "Client" if (turn.get("role") == "user") else "Assistant"
+        content = (turn.get("content") or "").strip()
+        if content:
+            turns.append(f"{role}: {content}")
+    turns.append(f"Client: {message.strip()}")
+    conversation = "\n".join(turns)
+
+    context: dict[str, Any] = {
+        "criteres_actuels": {k: criteria.get(k) for k in PLAN_KEYS if criteria.get(k) is not None},
+        "plan_mis_a_jour": bool(plan_changed),
+    }
+    if plan_changed and prior_criteria:
+        diff = _criteria_diff(prior_criteria, criteria)
+        if diff:
+            context["changements"] = diff
+    stats = _plan_stats(recommendation)
+    if stats:
+        context["plan"] = stats
+
+    prompt = (
+        f"{_REPLY_SYSTEM}\n\n"
+        f"CONVERSATION:\n{conversation}\n\n"
+        f"CONTEXTE (JSON):\n{json.dumps(context, ensure_ascii=False)}\n\n"
+        "Ta réponse au client :"
+    )
+    try:
+        resp = invoke_with_retry(
+            llm, prompt, max_retries=2, min_interval_s=1.5, base_delay_s=4.0
+        )
+    except Exception:
+        return None
+    if resp is None:
+        return None
+    text = (getattr(resp, "content", None) or str(resp)).strip()
+    return text or None
 
 
 def handle_chat(

@@ -136,8 +136,20 @@ def run_agent(
     except Exception:
         pass
 
+    from app.config.settings import get_settings
+    from app.services.chat_service import (
+        build_assistant_reply,
+        criteria_changed,
+        generate_llm_reply,
+    )
+
+    settings = get_settings()
+    provider = "groq" if settings.groq_api_key else "openai"
+
     conversation, is_conv = _build_conversation_text(history, message)
-    out = AGENT.invoke(
+
+    # 1) Brief cumulé (LLM sur toute la conversation)
+    brief_state = _brief_node(
         {
             "message": message,
             "conversation": conversation,
@@ -145,90 +157,139 @@ def run_agent(
             "prior_criteria": prior_criteria,
         }
     )
+    criteria = brief_state.get("brief") or {}
+    brief_source = brief_state.get("brief_source") or "llm_8b"
+
+    # 2) Régénérer le plan uniquement si les critères changent (sinon simple discussion)
+    plan_changed = criteria_changed(prior_criteria, criteria)
+
+    rec: dict[str, Any] = {}
+    rag: dict[str, Any] | None = None
+    reply_context_rec: dict[str, Any] | None = None
+
+    if plan_changed:
+        rec_state = _recommendation_node(dict(brief_state))
+        rag = rec_state.get("rag")
+        copy_state = _panel_copy_node(rec_state)
+        rec = copy_state.get("recommendation") or {}
+        reply_context_rec = rec
+    else:
+        # Discussion : on ne régénère pas les textes LLM, mais on recalcule le
+        # scoring déterministe (rapide, sans LLM) pour donner du contexte à la réponse.
+        try:
+            reply_context_rec = recommend_panels(criteria)
+        except Exception:
+            reply_context_rec = None
+
     total_s = round(time.time() - started, 1)
-    brief = out.get("brief") or {}
-    criteria = out.get("scoring_criteria") or brief
-    from app.config.settings import get_settings
-
-    settings = get_settings()
-    provider = "groq" if settings.groq_api_key else "openai"
-    panel_copy_ok = bool(out.get("panel_copy_ok"))
-    rec = out.get("recommendation") or {}
-    results = rec.get("results") or []
-    llm_expl_count = int(rec.get("llm_explanations_count") or 0)
-    llm_target = int(rec.get("llm_explanations_target") or len(results))
-    partial = 0 < llm_expl_count < llm_target
-    mostly_llm = llm_expl_count >= llm_target
-    expl_src = (
-        "llm_groq"
-        if mostly_llm
-        else ("llm_groq_partial" if partial else "llm_unavailable")
-    )
-
-    routes = routing_label(settings)
-    panel_model = rec.get("groq_panel_primary_model") or settings.groq_model_fast
     groq_usage = get_groq_usage()
 
-    meta: dict[str, Any] = {
-        "llm_used": True,
+    # 3) Réponse conversationnelle — TOUJOURS via le LLM (fallback template si indispo)
+    reply = generate_llm_reply(
+        history or [],
+        message,
+        criteria,
+        reply_context_rec,
+        prior_criteria=prior_criteria,
+        plan_changed=plan_changed,
+    )
+
+    if plan_changed:
+        results = rec.get("results") or []
+        llm_expl_count = int(rec.get("llm_explanations_count") or 0)
+        llm_target = int(rec.get("llm_explanations_target") or len(results))
+        partial = 0 < llm_expl_count < llm_target
+        mostly_llm = llm_expl_count >= llm_target
+        expl_src = (
+            "llm_groq"
+            if mostly_llm
+            else ("llm_groq_partial" if partial else "llm_unavailable")
+        )
+        routes = routing_label(settings)
+        panel_model = rec.get("groq_panel_primary_model") or settings.groq_model_fast
+
+        meta: dict[str, Any] = {
+            "llm_used": True,
+            "llm_provider": provider,
+            "groq_routing": routes,
+            "groq_model": panel_model,
+            "groq_model_fast": settings.groq_model_fast,
+            "brief_source": brief_source,
+            "rag_model": routes["rag"],
+            "panel_copy_model": panel_model,
+            "panel_explanations_8b": llm_expl_count,
+            "groq_api_calls": groq_usage.get("groq_api_calls", 0),
+            "groq_rate_limit_hits": groq_usage.get("groq_rate_limit_hits", 0),
+            "duration_total_sec": total_s,
+            "duration_panel_copy_sec": rec.get("panel_copy_duration_s"),
+            "latency_note": (
+                f"~{total_s}s — tout en {settings.groq_model_fast} "
+                f"({llm_expl_count}/{llm_target} textes). "
+                f"{groq_usage.get('groq_api_calls', 0)} appels Groq."
+            ),
+            "recommendation_source": "scoring_engine",
+            "explanation_source": expl_src,
+            "reply_source": "llm_groq" if reply else "template_rules",
+            "panel_copy_llm": mostly_llm,
+            "panel_explanations_llm_count": llm_expl_count,
+            "panel_explanations_total": llm_target,
+            "llm_ssl_verify": not settings.llm_skip_ssl_verify,
+            "llm_tls_mode": "verified" if not settings.llm_skip_ssl_verify else "docker_network",
+        }
+        if partial:
+            meta["panel_copy_partial"] = True
+            meta["hint"] = (
+                f"{llm_expl_count}/{llm_target} textes ({panel_model}). "
+                "Relancez après 1 min si quota Groq (429)."
+            )
+        elif llm_target > 0 and llm_expl_count >= llm_target:
+            meta["hint"] = f"Plan complet {llm_target}/{llm_target} — {panel_model}."
+
+        if not reply:
+            extra_note = None
+            if partial:
+                extra_note = (
+                    f"J'ai rédigé {llm_expl_count}/{llm_target} justifications pour l'instant "
+                    "(quota Groq) — relance dans ~1 min pour compléter."
+                )
+            reply = build_assistant_reply(
+                criteria, rec, prior_criteria=prior_criteria, extra_note=extra_note
+            )
+
+        mark_agent_finished()
+        return {
+            "assistant_message": reply,
+            "extracted_criteria": criteria,
+            "rag": rag,
+            "recommendation": rec,
+            "meta": meta,
+        }
+
+    # Tour de discussion : pas de nouveau plan renvoyé (le front garde le plan courant)
+    if not reply:
+        reply = build_assistant_reply(
+            criteria, reply_context_rec or {}, prior_criteria=None
+        )
+
+    meta = {
+        "llm_used": bool(settings.llm_enabled()),
         "llm_provider": provider,
-        "groq_routing": routes,
-        "groq_model": panel_model,
-        "groq_model_fast": settings.groq_model_fast,
-        "brief_source": out.get("brief_source") or "llm_8b",
-        "rag_model": routes["rag"],
-        "panel_copy_model": panel_model,
-        "panel_explanations_8b": llm_expl_count,
+        "brief_source": brief_source,
+        "recommendation_source": "unchanged",
+        "explanation_source": "conversation",
+        "reply_source": "llm_groq" if reply else "template_rules",
+        "conversation_turn": True,
+        "duration_total_sec": total_s,
         "groq_api_calls": groq_usage.get("groq_api_calls", 0),
         "groq_rate_limit_hits": groq_usage.get("groq_rate_limit_hits", 0),
-        "duration_total_sec": total_s,
-        "duration_panel_copy_sec": rec.get("panel_copy_duration_s"),
-        "latency_note": (
-            f"~{total_s}s — tout en {settings.groq_model_fast} "
-            f"({llm_expl_count}/{llm_target} textes). "
-            f"{groq_usage.get('groq_api_calls', 0)} appels Groq."
-        ),
-        "recommendation_source": "scoring_engine",
-        "explanation_source": expl_src,
-        "panel_copy_llm": mostly_llm,
-        "panel_explanations_llm_count": llm_expl_count,
-        "panel_explanations_total": llm_target,
         "llm_ssl_verify": not settings.llm_skip_ssl_verify,
         "llm_tls_mode": "verified" if not settings.llm_skip_ssl_verify else "docker_network",
     }
-    if partial:
-        meta["panel_copy_partial"] = True
-        meta["hint"] = (
-            f"{llm_expl_count}/{llm_target} textes ({panel_model}). "
-            "Relancez après 1 min si quota Groq (429)."
-        )
-    elif llm_target > 0 and llm_expl_count >= llm_target:
-        meta["hint"] = f"Plan complet {llm_target}/{llm_target} — {panel_model}."
-    elif llm_expl_count == 0 and llm_target > 0:
-        calls = groq_usage.get("groq_api_calls", 0)
-        meta["hint"] = (
-            f"Aucun texte ({panel_model}). Appels Groq : {calls}. "
-            "Quota saturé — attendez 2 min puis relancez."
-        )
-
-    from app.services.chat_service import build_assistant_reply
-
-    extra_note = None
-    if partial:
-        extra_note = (
-            f"J'ai rédigé {llm_expl_count}/{llm_target} justifications pour l'instant "
-            "(quota Groq) — relance dans ~1 min pour compléter."
-        )
-    assistant_message = build_assistant_reply(
-        criteria, rec, prior_criteria=prior_criteria, extra_note=extra_note
-    )
 
     mark_agent_finished()
-
     return {
-        "assistant_message": assistant_message,
+        "assistant_message": reply,
         "extracted_criteria": criteria,
-        "rag": out.get("rag"),
-        "recommendation": rec,
+        "recommendation": None,
         "meta": meta,
     }

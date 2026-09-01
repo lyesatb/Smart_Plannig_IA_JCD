@@ -85,8 +85,15 @@ export default function Home() {
     if (el) el.scrollTop = el.scrollHeight;
   }, [messages, loading]);
 
+  // Dernière réponse contenant un plan : une simple discussion ne remplace pas le plan affiché.
   const lastAnswer =
-    [...messages].reverse().find((m) => m.role === "assistant" && m.answer)?.answer ?? null;
+    [...messages]
+      .reverse()
+      .find(
+        (m) =>
+          m.role === "assistant" &&
+          (m.answer?.recommendation?.results?.length ?? 0) > 0
+      )?.answer ?? null;
   const panels: Panel[] = lastAnswer?.recommendation?.results || [];
   const dynamicKpis = buildDynamicKpis(kpis, lastAnswer);
 
