@@ -27,6 +27,27 @@ const markerIcon =
         iconAnchor: [12, 41],
       });
 
+// Style de carte : Mapbox (dark) si un token est fourni, sinon OpenStreetMap (gratuit, sans clé).
+const MAPBOX_TOKEN = process.env.NEXT_PUBLIC_MAPBOX_TOKEN;
+// Style Mapbox : "dark-v11" pour coller au thème sombre. Change en "streets-v12",
+// "satellite-streets-v12", "navigation-night-v1"… si tu préfères.
+const MAPBOX_STYLE = process.env.NEXT_PUBLIC_MAPBOX_STYLE || 'dark-v11';
+
+const tileConfig = MAPBOX_TOKEN
+  ? {
+      url: `https://api.mapbox.com/styles/v1/mapbox/${MAPBOX_STYLE}/tiles/512/{z}/{x}/{y}@2x?access_token=${MAPBOX_TOKEN}`,
+      attribution:
+        '&copy; <a href="https://www.mapbox.com/about/maps/">Mapbox</a> &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+      tileSize: 512,
+      zoomOffset: -1,
+    }
+  : {
+      url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+      tileSize: 256,
+      zoomOffset: 0,
+    };
+
 export function MapView({ panels }: { panels: Panel[] }) {
   const center: [number, number] =
     panels.length > 0
@@ -37,8 +58,10 @@ export function MapView({ panels }: { panels: Panel[] }) {
     <div className="relative h-[420px] rounded-3xl overflow-hidden bg-black/20 border border-white/10">
       <MapContainer center={center} zoom={12} scrollWheelZoom={true} className="h-full w-full">
         <TileLayer
-          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+          attribution={tileConfig.attribution}
+          url={tileConfig.url}
+          tileSize={tileConfig.tileSize}
+          zoomOffset={tileConfig.zoomOffset}
         />
         {panels.slice(0, 200).map((p) => (
           <Marker
