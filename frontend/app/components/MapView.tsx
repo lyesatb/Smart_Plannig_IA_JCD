@@ -30,21 +30,37 @@ const markerIcon =
 
 // Carte : tuiles Mapbox si un token est fourni, sinon OpenStreetMap (gratuit, sans clé).
 const MAPBOX_TOKEN = process.env.NEXT_PUBLIC_MAPBOX_TOKEN;
-const DEFAULT_STYLE = process.env.NEXT_PUBLIC_MAPBOX_STYLE || 'dark-v11';
 
-// Styles Mapbox proposés à l'utilisateur (sélecteur dans la carte).
-const MAPBOX_STYLES: { id: string; label: string }[] = [
-  { id: 'dark-v11', label: 'Sombre' },
-  { id: 'navigation-night-v1', label: 'Nuit' },
-  { id: 'light-v11', label: 'Clair' },
-  { id: 'streets-v12', label: 'Rues' },
-  { id: 'satellite-streets-v12', label: 'Satellite' },
+// Un « path » de style Mapbox = "compte/id_style" (ex. "mapbox/dark-v11" ou "cyrilh/cmewq...").
+function normalizeStylePath(raw: string): string {
+  const v = (raw || '').replace(/^mapbox:\/\/styles\//, '').trim();
+  return v.includes('/') ? v : `mapbox/${v}`;
+}
+
+// Style personnalisé (créé dans Mapbox Studio) : configurable via env, avec valeur par défaut.
+const CUSTOM_STYLE = normalizeStylePath(
+  process.env.NEXT_PUBLIC_MAPBOX_CUSTOM_STYLE || 'cyrilh/cmewqxmu4002u01segssr9is7',
+);
+const CUSTOM_LABEL = process.env.NEXT_PUBLIC_MAPBOX_CUSTOM_LABEL || 'Manager';
+
+const DEFAULT_STYLE = normalizeStylePath(
+  process.env.NEXT_PUBLIC_MAPBOX_STYLE || 'dark-v11',
+);
+
+// Styles proposés dans le sélecteur (le style perso en premier).
+const MAPBOX_STYLES: { path: string; label: string }[] = [
+  ...(CUSTOM_STYLE ? [{ path: CUSTOM_STYLE, label: CUSTOM_LABEL }] : []),
+  { path: 'mapbox/dark-v11', label: 'Sombre' },
+  { path: 'mapbox/navigation-night-v1', label: 'Nuit' },
+  { path: 'mapbox/light-v11', label: 'Clair' },
+  { path: 'mapbox/streets-v12', label: 'Rues' },
+  { path: 'mapbox/satellite-streets-v12', label: 'Satellite' },
 ];
 
-function tileFor(style: string) {
+function tileFor(stylePath: string) {
   if (MAPBOX_TOKEN) {
     return {
-      url: `https://api.mapbox.com/styles/v1/mapbox/${style}/tiles/512/{z}/{x}/{y}@2x?access_token=${MAPBOX_TOKEN}`,
+      url: `https://api.mapbox.com/styles/v1/${stylePath}/tiles/512/{z}/{x}/{y}@2x?access_token=${MAPBOX_TOKEN}`,
       attribution:
         '&copy; <a href="https://www.mapbox.com/about/maps/">Mapbox</a> &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
       tileSize: 512,
@@ -83,7 +99,7 @@ export function MapView({ panels }: { panels: Panel[] }) {
             className="rounded-lg bg-black/70 border border-white/20 text-white text-xs px-2.5 py-1.5 backdrop-blur outline-none cursor-pointer hover:border-cyan-300/60 focus:border-cyan-400"
           >
             {MAPBOX_STYLES.map((s) => (
-              <option key={s.id} value={s.id} className="bg-[#0b1220] text-white">
+              <option key={s.path} value={s.path} className="bg-[#0b1220] text-white">
                 {s.label}
               </option>
             ))}
