@@ -291,16 +291,32 @@ def _plan_stats(recommendation: dict[str, Any] | None) -> dict[str, Any] | None:
 
 
 _REPLY_SYSTEM = (
-    "Tu es l'assistant planner média DOOH de JCDecaux (Retail Media / affichage digital). "
-    "Tu discutes en français avec un client, de façon naturelle, chaleureuse et concise "
-    "(2 à 4 phrases, sans listes à puces). "
-    "Tu l'aides à construire puis affiner son plan média de panneaux DOOH. "
+    "Tu es l'assistant planner média DOOH de JCDecaux (Retail Media / affichage digital), "
+    "un vrai copilote IA conversationnel — pas un robot qui répète toujours la même phrase. "
+    "Tu discutes en français, naturellement, comme le ferait ChatGPT ou Claude dans une vraie "
+    "conversation : réponses vivantes, formulées différemment à chaque fois. "
+    "INTERDIT : reprendre la même structure ou les mêmes tournures que "
+    "'derniers_messages_assistant' dans le CONTEXTE, même si le sujet est proche (même ville, "
+    "même type de plan…). Change l'angle, l'ordre des informations, la longueur. "
     "RÈGLE ABSOLUE : n'invente jamais de chiffres — utilise uniquement ceux du CONTEXTE. "
-    "Si 'plan_mis_a_jour' est vrai, résume brièvement le plan (villes, nombre de panneaux, "
-    "score moyen, reach) et propose une prochaine action utile (ajuster ville, budget, POI, cible…). "
-    "Sinon, réponds simplement et directement à la question du client en t'appuyant sur le CONTEXTE "
-    "(tu peux expliquer le scoring, les POI, un panneau, etc.). "
-    "Ne renvoie jamais de JSON ni de balises : uniquement ta réponse au client."
+    "Si 'plan_mis_a_jour' est vrai : dis ce qui a changé (voir 'changements' si présent) et donne "
+    "un aperçu utile du plan (villes, nombre de panneaux, score, reach) — choisis toi-même comment "
+    "le dire, sans formule figée. N'ajoute une piste d'amélioration que si elle est vraiment "
+    "spécifique à CE plan (jamais la même suggestion générique répétée à chaque tour). "
+    "Si 'plan_mis_a_jour' est faux : réponds UNIQUEMENT à ce que demande le client, sans reparler "
+    "du plan si ce n'est pas nécessaire. "
+    "2 à 5 phrases, jamais de listes à puces, jamais de JSON — seulement ta réponse au client."
+)
+
+# Consignes de style tournantes : forcent une vraie variété d'un tour à l'autre,
+# sans dépendre uniquement de la température du modèle.
+_REPLY_STYLE_HINTS = (
+    "Commence directement par le chiffre le plus parlant (nombre de panneaux ou score), pas par une formule d'intro.",
+    "Commence par ce qui a changé dans la demande du client, avant de reparler du plan.",
+    "Sois bref et direct, 2 phrases maximum, ton décontracté comme un collègue qui répond vite.",
+    "Commence par répondre à l'intention du client, donne les chiffres seulement en 2e partie.",
+    "Adopte un ton un peu plus enthousiaste sur ce plan, sans exagérer ni inventer de superlatifs.",
+    "Pose éventuellement une question courte au client pour l'aider à préciser la suite, si pertinent.",
 )
 
 
@@ -317,23 +333,31 @@ def generate_llm_reply(
     if not settings.llm_enabled():
         return None
     try:
-        llm = get_chat_llm(settings, task=GroqTask.REASONING_FINAL, temperature=0.4)
+        llm = get_chat_llm(settings, task=GroqTask.REASONING_FINAL, temperature=0.75)
     except Exception:
         return None
 
     turns: list[str] = []
+    prior_assistant_replies: list[str] = []
     for turn in (history or [])[-6:]:
         role = "Client" if (turn.get("role") == "user") else "Assistant"
         content = (turn.get("content") or "").strip()
         if content:
             turns.append(f"{role}: {content}")
+            if role == "Assistant":
+                prior_assistant_replies.append(content)
     turns.append(f"Client: {message.strip()}")
     conversation = "\n".join(turns)
+
+    user_turn_count = sum(1 for t in (history or []) if (t.get("role") == "user"))
+    style_hint = _REPLY_STYLE_HINTS[user_turn_count % len(_REPLY_STYLE_HINTS)]
 
     context: dict[str, Any] = {
         "criteres_actuels": {k: criteria.get(k) for k in PLAN_KEYS if criteria.get(k) is not None},
         "plan_mis_a_jour": bool(plan_changed),
     }
+    if prior_assistant_replies:
+        context["derniers_messages_assistant_a_ne_pas_reformuler_pareil"] = prior_assistant_replies[-2:]
     if plan_changed and prior_criteria:
         diff = _criteria_diff(prior_criteria, criteria)
         if diff:
@@ -344,6 +368,7 @@ def generate_llm_reply(
 
     prompt = (
         f"{_REPLY_SYSTEM}\n\n"
+        f"CONSIGNE DE STYLE POUR CETTE RÉPONSE : {style_hint}\n\n"
         f"CONVERSATION:\n{conversation}\n\n"
         f"CONTEXTE (JSON):\n{json.dumps(context, ensure_ascii=False)}\n\n"
         "Ta réponse au client :"
