@@ -331,26 +331,61 @@ export default function Home() {
     </div>
   );
 
-  // Écran d'accueil façon ChatGPT : uniquement le chat, centré, tant qu'aucun plan n'existe.
+  // Écran d'accueil minimaliste façon ChatGPT : juste une barre de saisie centrée.
   if (!showDashboard) {
     return (
       <main className="min-h-screen bg-gradient-to-br from-[#05060a] via-[#101827] to-[#111827] text-white p-6">
-        <section className="max-w-3xl mx-auto min-h-[calc(100vh-3rem)] flex flex-col justify-center gap-8">
-          <div className="text-center">
-            <div className="flex items-center justify-center gap-3 text-cyan-300 mb-3">
-              <Sparkles size={22} />
-              <span className="uppercase tracking-[0.25em] text-xs">Retail Media Intelligence</span>
+        <div className="min-h-[calc(100vh-3rem)] flex flex-col items-center justify-center">
+          <div className="w-full max-w-2xl">
+            <div className="flex items-center justify-center gap-2 text-cyan-300 mb-5">
+              <Sparkles size={18} />
+              <span className="uppercase tracking-[0.25em] text-[11px]">Smart Planning IA</span>
             </div>
-            <h1 className="text-4xl md:text-6xl font-bold">
-              Smart Planning IA
+            <h1 className="text-3xl md:text-4xl font-semibold text-center mb-8">
+              Quelle campagne veux-tu planifier ?
             </h1>
-            <p className="text-gray-300 mt-4 max-w-2xl mx-auto">
-              Décris ta campagne en langage naturel : l'assistant IA génère un plan média DOOH,
-              puis tu l'affines en discutant. Le plan et la carte apparaissent dès ta première demande.
+
+            <div className="relative rounded-[26px] bg-black/40 border border-white/15 focus-within:border-cyan-400/70 shadow-xl transition">
+              <textarea
+                className="w-full max-h-48 min-h-[60px] bg-transparent px-5 py-4 pr-14 text-[15px] outline-none resize-none"
+                rows={1}
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                onKeyDown={onKeyDown}
+                placeholder="Décris ta campagne…"
+                autoFocus
+              />
+              <button
+                onClick={() => send()}
+                disabled={loading || !input.trim()}
+                aria-label="Envoyer"
+                className="absolute right-2.5 bottom-2.5 h-9 w-9 rounded-full bg-cyan-400 text-black flex items-center justify-center hover:bg-cyan-300 disabled:opacity-40 disabled:cursor-not-allowed"
+              >
+                <Send size={16} />
+              </button>
+            </div>
+
+            <p className="text-center text-[11px] text-gray-500 mt-3">
+              Entrée pour envoyer · Maj+Entrée = nouvelle ligne
             </p>
+
+            {loading && (
+              <div className="flex items-center justify-center gap-2 text-sm text-cyan-200/80 mt-6">
+                <Bot size={16} />
+                <span className="inline-flex gap-1">
+                  <Dot /> <Dot /> <Dot />
+                </span>
+                <span className="text-gray-400">Analyse en cours…</span>
+              </div>
+            )}
+
+            {chatError && (
+              <p className="mt-4 text-sm text-amber-300 bg-amber-400/10 border border-amber-300/30 rounded-2xl p-3">
+                {chatError}
+              </p>
+            )}
           </div>
-          {chatPanel}
-        </section>
+        </div>
       </main>
     );
   }
