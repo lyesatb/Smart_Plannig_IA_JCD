@@ -179,7 +179,7 @@ export default function Home() {
     const p: Panel[] = answer?.recommendation?.results || [];
     const dk = buildDynamicKpis(kpis, answer);
     return (
-      <div className="mt-3 space-y-5">
+      <div className="mt-6 space-y-5">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
           <Kpi icon={<Monitor />} label={dk.k1Label} value={dk.k1Value} />
           <Kpi icon={<Zap />} label={dk.k2Label} value={dk.k2Value} />
@@ -344,27 +344,17 @@ export default function Home() {
           </div>
         </div>
 
-        {/* Fil de discussion — le prompt s'affiche immédiatement, la réponse juste après,
-            et le plan (si généré) est attaché directement sous cette réponse. */}
+        {/* Fil de discussion : les bulles se suivent toujours directement (un nouveau prompt
+            vient juste après la réponse précédente, jamais sous le plan). */}
         <div className="space-y-6">
           {messages.map((m, i) => {
             // On ancre toujours sur TON dernier message envoyé (pas sur la réponse), pour
             // que ton prompt reste en haut de l'écran avec sa réponse juste en dessous.
             const isLastUserMessage =
               m.role === "user" && !messages.slice(i + 1).some((x) => x.role === "user");
-            if (m.role === "user") {
-              return (
-                <div key={m.id} ref={isLastUserMessage ? latestUserRef : undefined}>
-                  <ChatBubble role="user" content={m.content} />
-                </div>
-              );
-            }
-            const hasPlan = (m.answer?.recommendation?.results?.length ?? 0) > 0;
-            const isLatestPlan = hasPlan && m === lastAnswerMessage;
             return (
-              <div key={m.id}>
-                <ChatBubble role="assistant" content={m.content} />
-                {isLatestPlan && renderPlanAttachment(m.answer)}
+              <div key={m.id} ref={isLastUserMessage ? latestUserRef : undefined}>
+                <ChatBubble role={m.role} content={m.content} />
               </div>
             );
           })}
@@ -379,6 +369,9 @@ export default function Home() {
             </div>
           )}
         </div>
+
+        {/* Le plan média courant : une seule fois, toujours en bas du fil, sous le dernier échange. */}
+        {lastAnswer && renderPlanAttachment(lastAnswer)}
 
         {messages.length > 0 && !loading && (
           <div className="flex flex-wrap gap-2 mt-6">
