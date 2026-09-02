@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from "react";
-import { MapPin, Sparkles, BarChart3, Send, Monitor, Target, Zap, RotateCcw, User, Bot } from "lucide-react";
+import { MapPin, Sparkles, BarChart3, Send, Monitor, Target, Zap, RotateCcw, User, Bot, Info } from "lucide-react";
 import dynamic from "next/dynamic";
 
 const MapView = dynamic(
@@ -64,6 +64,7 @@ export default function Home() {
   const [chatError, setChatError] = useState<string | null>(null);
   const [kpisLoading, setKpisLoading] = useState(true);
   const [apiBase, setApiBase] = useState<string | null>(null);
+  const [showDetails, setShowDetails] = useState(false);
 
   useEffect(() => {
     getApiBase().then(setApiBase);
@@ -173,14 +174,27 @@ export default function Home() {
         <h2 className="text-xl font-semibold flex items-center gap-2">
           <Sparkles className="text-cyan-300" /> Assistant IA
         </h2>
-        {messages.length > 0 && (
-          <button
-            onClick={resetConversation}
-            className="text-xs text-gray-400 hover:text-cyan-300 flex items-center gap-1"
-          >
-            <RotateCcw size={14} /> Nouvelle discussion
-          </button>
-        )}
+        <div className="flex items-center gap-3">
+          {lastAnswer && (
+            <button
+              onClick={() => setShowDetails((v) => !v)}
+              title="Détails techniques (moteur IA, critères)"
+              className={`text-xs flex items-center gap-1 ${
+                showDetails ? "text-cyan-300" : "text-gray-500 hover:text-cyan-300"
+              }`}
+            >
+              <Info size={14} />
+            </button>
+          )}
+          {messages.length > 0 && (
+            <button
+              onClick={resetConversation}
+              className="text-xs text-gray-400 hover:text-cyan-300 flex items-center gap-1"
+            >
+              <RotateCcw size={14} /> Nouvelle discussion
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Fil de discussion — le plus ancien en haut, le plus récent en bas (comme ChatGPT) */}
@@ -220,7 +234,7 @@ export default function Home() {
         </p>
       )}
 
-      {lastAnswer && (
+      {showDetails && lastAnswer && (
         <div className="mt-6 text-sm text-gray-300">
           {lastAnswer.meta && <EngineMeta meta={lastAnswer.meta} />}
           <details className="rounded-xl border border-white/10 bg-black/25 text-xs">
