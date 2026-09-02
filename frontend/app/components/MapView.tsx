@@ -2,9 +2,9 @@
 
 import 'leaflet/dist/leaflet.css';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import L from 'leaflet';
-import { MapContainer, TileLayer, Marker, CircleMarker, Popup } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, CircleMarker, Popup, useMap } from 'react-leaflet';
 
 type Panel = {
   panel_id: string;
@@ -14,8 +14,24 @@ type Panel = {
   district: string;
   format: string;
   poi_nearby: string;
-  smart_score?: number;
+  daily_traffic?: number;
+  impressions?: number;
+  distance_m?: number | null;
+  nearest_store?: string | null;
+  arrondissement?: number | null;
 };
+
+export type Store = {
+  name: string;
+  address?: string;
+  latitude: number;
+  longitude: number;
+  arrondissement?: number | null;
+};
+
+// Bleu marine JCDecaux pour les faces ; rouge pour les magasins de l'enseigne.
+const NAVY = '#1e3a8a';
+const STORE_RED = '#b91c1c';
 
 const pinIcon =
   typeof window === 'undefined'
@@ -32,37 +48,28 @@ const pinIcon =
 // Carte : tuiles Mapbox si un token est fourni, sinon OpenStreetMap (gratuit, sans clé).
 const MAPBOX_TOKEN = process.env.NEXT_PUBLIC_MAPBOX_TOKEN;
 
-// Un « path » de style Mapbox = "compte/id_style" (ex. "mapbox/dark-v11" ou "cyrilh/cmewq...").
 function normalizeStylePath(raw: string): string {
   const v = (raw || '').replace(/^mapbox:\/\/styles\//, '').trim();
   return v.includes('/') ? v : `mapbox/${v}`;
 }
 
-// Style personnalisé (créé dans Mapbox Studio) : configurable via env, avec valeur par défaut.
 const CUSTOM_STYLE = normalizeStylePath(
   process.env.NEXT_PUBLIC_MAPBOX_CUSTOM_STYLE || 'cyrilh/cmewqxmu4002u01segssr9is7',
 );
-const CUSTOM_LABEL = process.env.NEXT_PUBLIC_MAPBOX_CUSTOM_LABEL || 'Manager';
+const CUSTOM_LABEL = process.env.NEXT_PUBLIC_MAPBOX_CUSTOM_LABEL || 'JCDecaux';
+const DEFAULT_STYLE = normalizeStylePath(process.env.NEXT_PUBLIC_MAPBOX_STYLE || 'light-v11');
 
-const DEFAULT_STYLE = normalizeStylePath(
-  process.env.NEXT_PUBLIC_MAPBOX_STYLE || 'dark-v11',
-);
-
-// Styles proposés dans le sélecteur (le style perso en premier).
 const MAPBOX_STYLES: { path: string; label: string }[] = [
   ...(CUSTOM_STYLE ? [{ path: CUSTOM_STYLE, label: CUSTOM_LABEL }] : []),
-  { path: 'mapbox/dark-v11', label: 'Sombre' },
-  { path: 'mapbox/navigation-night-v1', label: 'Nuit' },
   { path: 'mapbox/light-v11', label: 'Clair' },
   { path: 'mapbox/streets-v12', label: 'Rues' },
+  { path: 'mapbox/dark-v11', label: 'Sombre' },
   { path: 'mapbox/satellite-streets-v12', label: 'Satellite' },
 ];
 
-// Styles de marqueurs proposés à l'utilisateur.
 const MARKER_STYLES: { id: string; label: string }[] = [
   { id: 'dot', label: 'Points' },
   { id: 'ring', label: 'Ronds' },
-  { id: 'score', label: 'Score' },
   { id: 'pin', label: 'Épingles' },
 ];
 const DEFAULT_MARKER = process.env.NEXT_PUBLIC_MAP_MARKER || 'dot';
@@ -85,42 +92,42 @@ function tileFor(stylePath: string) {
   };
 }
 
-// Couleur du marqueur selon le score (vert = top, orange = moyen, rouge = plus faible).
-function scoreColor(score?: number): string {
-  const s = typeof score === 'number' ? score : 0;
-  if (s >= 85) return '#22c55e';
-  if (s >= 70) return '#eab308';
-  return '#f43f5e';
+function fmtInt(n?: number | null) {
+  if (typeof n !== 'number' || !Number.isFinite(n)) return '—';
+  return new Intl.NumberFormat('fr-FR').format(Math.round(n));
 }
 
-function scoreDivIcon(score: number | undefined, color: string) {
-  const val = typeof score === 'number' ? Math.round(score) : '';
-  return L.divIcon({
-    className: 'panel-score-marker',
-    html:
-      `<div style="width:26px;height:26px;border-radius:9999px;background:${color};` +
-      `border:2px solid rgba(255,255,255,.85);box-shadow:0 1px 5px rgba(0,0,0,.45);` +
-      `display:flex;align-items:center;justify-content:center;color:#fff;` +
-      `font-size:11px;font-weight:700;text-shadow:0 1px 2px rgba(0,0,0,.5)">${val}</div>`,
-    iconSize: [26, 26],
-    iconAnchor: [13, 13],
-    popupAnchor: [0, -14],
-  });
-}
+const storeIcon =
+  typeof window === 'undefined'
+    ? undefined
+    : L.divIcon({
+        className: 'store-marker',
+        html:
+          `<div style="width:16px;height:16px;border-radius:4px;background:${STORE_RED};` +
+          `border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.45)"></div>`,
+        iconSize: [16, 16],
+        iconAnchor: [8, 8],
+        popupAnchor: [0, -10],
+      });
 
 function PanelPopup({ p }: { p: Panel }) {
   return (
     <Popup>
       <div className="text-sm">
         <div className="font-semibold">
-          {p.city} — {p.district}
+          {p.format} — {p.city}
+          {p.arrondissement ? ` ${p.arrondissement}e` : ''}
         </div>
-        <div className="opacity-80">
-          {p.format} · POI: {p.poi_nearby}
-        </div>
-        {typeof p.smart_score === 'number' && (
+        <div className="opacity-80">{p.district}</div>
+        {p.distance_m != null && (
           <div className="mt-1">
-            Score: <b>{p.smart_score}</b>
+            <b>{fmtInt(p.distance_m)} m</b> du {p.nearest_store || 'magasin'}
+          </div>
+        )}
+        {typeof p.daily_traffic === 'number' && (
+          <div className="mt-1">
+            Audience : <b>{fmtInt(p.daily_traffic)}</b> passages/jour
+            {typeof p.impressions === 'number' ? ` · ≈ ${fmtInt(p.impressions)} impressions` : ''}
           </div>
         )}
       </div>
@@ -129,9 +136,7 @@ function PanelPopup({ p }: { p: Panel }) {
 }
 
 function renderMarker(p: Panel, style: string) {
-  const color = scoreColor(p.smart_score);
   const key = `${p.panel_id}-${style}`;
-
   if (style === 'pin') {
     return (
       <Marker key={key} position={[p.latitude, p.longitude]} icon={pinIcon as any}>
@@ -139,32 +144,41 @@ function renderMarker(p: Panel, style: string) {
       </Marker>
     );
   }
-
-  if (style === 'score') {
-    return (
-      <Marker key={key} position={[p.latitude, p.longitude]} icon={scoreDivIcon(p.smart_score, color)}>
-        <PanelPopup p={p} />
-      </Marker>
-    );
-  }
-
   const ring = style === 'ring';
   return (
     <CircleMarker
       key={key}
       center={[p.latitude, p.longitude]}
-      radius={ring ? 7 : 6}
+      radius={ring ? 8 : 7}
       pathOptions={{
-        color,
-        fillColor: color,
-        weight: ring ? 2 : 1,
+        color: NAVY,
+        fillColor: NAVY,
+        weight: ring ? 2.5 : 1.5,
         opacity: 0.95,
-        fillOpacity: ring ? 0.15 : 0.85,
+        fillOpacity: ring ? 0.15 : 0.9,
       }}
     >
       <PanelPopup p={p} />
     </CircleMarker>
   );
+}
+
+/** Recentre / recadre la carte quand le dispositif change. */
+function FitBounds({ panels, stores }: { panels: Panel[]; stores: Store[] }) {
+  const map = useMap();
+  useEffect(() => {
+    const pts: [number, number][] = [
+      ...panels.map((p) => [p.latitude, p.longitude] as [number, number]),
+      ...stores.map((s) => [s.latitude, s.longitude] as [number, number]),
+    ];
+    if (pts.length === 0) return;
+    if (pts.length === 1) {
+      map.setView(pts[0], 14);
+      return;
+    }
+    map.fitBounds(L.latLngBounds(pts), { padding: [32, 32], maxZoom: 15 });
+  }, [map, panels, stores]);
+  return null;
 }
 
 function MapSelect({
@@ -180,17 +194,17 @@ function MapSelect({
 }) {
   return (
     <div className="flex items-center gap-2 justify-end">
-      <span className="hidden sm:inline text-[11px] text-white/70 bg-black/50 rounded-lg px-2 py-1 backdrop-blur">
+      <span className="hidden sm:inline text-[11px] text-[#1f5f7f] bg-white/90 rounded-md px-2 py-1 shadow">
         {label}
       </span>
       <select
         value={value}
         onChange={(e) => onChange(e.target.value)}
         aria-label={label}
-        className="rounded-lg bg-black/70 border border-white/20 text-white text-xs px-2.5 py-1.5 backdrop-blur outline-none cursor-pointer hover:border-cyan-300/60 focus:border-cyan-400"
+        className="rounded-md bg-white/95 border border-[#1f5f7f]/30 text-[#0f2a3a] text-xs px-2.5 py-1.5 shadow outline-none cursor-pointer hover:border-[#1f5f7f]"
       >
         {options.map((o) => (
-          <option key={o.value} value={o.value} className="bg-[#0b1220] text-white">
+          <option key={o.value} value={o.value}>
             {o.label}
           </option>
         ))}
@@ -199,35 +213,55 @@ function MapSelect({
   );
 }
 
-export function MapView({ panels }: { panels: Panel[] }) {
+export function MapView({
+  panels,
+  stores = [],
+  height = 520,
+}: {
+  panels: Panel[];
+  stores?: Store[];
+  height?: number;
+}) {
   const [style, setStyle] = useState<string>(DEFAULT_STYLE);
   const [marker, setMarker] = useState<string>(DEFAULT_MARKER);
 
   const center: [number, number] =
-    panels.length > 0
-      ? [panels[0].latitude, panels[0].longitude]
-      : [48.8566, 2.3522]; // Paris
+    panels.length > 0 ? [panels[0].latitude, panels[0].longitude] : [48.8566, 2.3522];
 
   const tile = tileFor(style);
 
   return (
-    <div className="relative h-[420px] rounded-3xl overflow-hidden bg-black/20 border border-white/10">
+    <div
+      className="relative rounded-md overflow-hidden bg-[#dfe6ea] border border-[#1f5f7f]/20"
+      style={{ height }}
+    >
       <div className="absolute top-3 right-3 z-[1000] flex flex-col gap-2">
         {MAPBOX_TOKEN && (
           <MapSelect
-            label="Thème"
+            label="Fond"
             value={style}
             onChange={setStyle}
             options={MAPBOX_STYLES.map((s) => ({ value: s.path, label: s.label }))}
           />
         )}
         <MapSelect
-          label="Marqueurs"
+          label="Faces"
           value={marker}
           onChange={setMarker}
           options={MARKER_STYLES.map((s) => ({ value: s.id, label: s.label }))}
         />
       </div>
+
+      {stores.length > 0 && (
+        <div className="absolute bottom-3 left-3 z-[1000] flex items-center gap-3 text-[11px] bg-white/90 rounded-md px-2.5 py-1.5 shadow text-[#0f2a3a]">
+          <span className="inline-flex items-center gap-1">
+            <span className="inline-block h-3 w-3 rounded-full" style={{ background: NAVY }} /> Faces
+          </span>
+          <span className="inline-flex items-center gap-1">
+            <span className="inline-block h-3 w-3 rounded-sm" style={{ background: STORE_RED }} /> Magasins
+          </span>
+        </div>
+      )}
 
       <MapContainer
         center={center}
@@ -243,6 +277,17 @@ export function MapView({ panels }: { panels: Panel[] }) {
           tileSize={tile.tileSize}
           zoomOffset={tile.zoomOffset}
         />
+        <FitBounds panels={panels} stores={stores} />
+        {stores.map((s, i) => (
+          <Marker key={`store-${i}`} position={[s.latitude, s.longitude]} icon={storeIcon as any}>
+            <Popup>
+              <div className="text-sm">
+                <div className="font-semibold">{s.name}</div>
+                {s.address && <div className="opacity-80">{s.address}</div>}
+              </div>
+            </Popup>
+          </Marker>
+        ))}
         {panels.slice(0, 200).map((p) => renderMarker(p, marker))}
       </MapContainer>
     </div>

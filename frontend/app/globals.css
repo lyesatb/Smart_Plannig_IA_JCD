@@ -3,8 +3,45 @@
 @tailwind utilities;
 
 body {
-  background: #06070a;
-  color: white;
+  background: #e9e9e9;
+  color: #111827;
+}
+
+/* Blocs du template « JCDecaux + » */
+.jcd-block {
+  background: #1f5f7f;
+  color: #fff;
+  border-radius: 0.5rem;
+  border: 2px solid #163f56;
+}
+
+.jcd-block--soft {
+  background: #ffffff;
+  color: #111827;
+  border-radius: 0.5rem;
+  border: 2px solid #1f5f7f;
+}
+
+.jcd-red {
+  background: #c00000;
+  color: #fff;
+}
+.jcd-red:hover:not(:disabled) {
+  background: #a30000;
+}
+
+.jcd-select {
+  width: 100%;
+  background: #fff;
+  color: #111827;
+  font-size: 0.75rem;
+  border-radius: 0.25rem;
+  padding: 0.35rem 0.5rem;
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  outline: none;
+}
+.jcd-select:disabled {
+  opacity: 0.5;
 }
 
 .glass {
