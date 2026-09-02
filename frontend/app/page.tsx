@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { MapPin, Sparkles, BarChart3, Send, Monitor, Target, Zap, RotateCcw, User, Bot } from "lucide-react";
 import dynamic from "next/dynamic";
 
@@ -64,7 +64,6 @@ export default function Home() {
   const [chatError, setChatError] = useState<string | null>(null);
   const [kpisLoading, setKpisLoading] = useState(true);
   const [apiBase, setApiBase] = useState<string | null>(null);
-  const threadRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     getApiBase().then(setApiBase);
@@ -81,8 +80,10 @@ export default function Home() {
   }, [apiBase]);
 
   useEffect(() => {
-    const el = threadRef.current;
-    if (el) el.scrollTop = el.scrollHeight; // façon ChatGPT : le plus récent en bas, près de la saisie
+    if (messages.length === 0) return;
+    requestAnimationFrame(() => {
+      window.scrollTo({ top: document.documentElement.scrollHeight, behavior: "smooth" });
+    });
   }, [messages, loading]);
 
   // Dernière réponse contenant un plan : une simple discussion ne remplace pas le plan affiché.
@@ -183,10 +184,7 @@ export default function Home() {
       </div>
 
       {/* Fil de discussion — le plus ancien en haut, le plus récent en bas (comme ChatGPT) */}
-      <div
-        ref={threadRef}
-        className="overflow-auto space-y-4 pr-1 min-h-[160px] max-h-[440px]"
-      >
+      <div className="space-y-4">
         {messages.map((m) => (
           <ChatBubble key={m.id} role={m.role} content={m.content} />
         ))}
@@ -215,27 +213,6 @@ export default function Home() {
           ))}
         </div>
       )}
-
-      {/* Barre de saisie — ancrée en bas du chat */}
-      <div className="sticky bottom-0 mt-4 rounded-2xl bg-black/60 backdrop-blur border border-white/10 focus-within:border-cyan-400 transition">
-        <textarea
-          className="w-full h-20 rounded-2xl bg-transparent p-3 text-sm outline-none resize-none"
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          onKeyDown={onKeyDown}
-          placeholder="Réponds pour affiner (ex. « plutôt à Lyon », « 5 par ville »)…"
-        />
-        <div className="flex items-center justify-between px-3 pb-3">
-          <span className="text-[11px] text-gray-500">Entrée pour envoyer · Maj+Entrée = nouvelle ligne</span>
-          <button
-            onClick={() => send()}
-            disabled={loading || !input.trim()}
-            className="bg-cyan-400 text-black font-bold py-2 px-4 rounded-xl flex items-center justify-center gap-2 hover:bg-cyan-300 disabled:opacity-60 disabled:cursor-not-allowed"
-          >
-            <Send size={16} /> {loading ? "…" : "Envoyer"}
-          </button>
-        </div>
-      </div>
 
       {chatError && (
         <p className="mt-3 text-sm text-amber-300 bg-amber-400/10 border border-amber-300/30 rounded-2xl p-3">
@@ -367,7 +344,7 @@ export default function Home() {
 
   // Tableau de bord complet, une fois qu'un plan est généré.
   return (
-    <main className="min-h-screen bg-gradient-to-br from-[#05060a] via-[#101827] to-[#111827] text-white p-6">
+    <main className="min-h-screen bg-gradient-to-br from-[#05060a] via-[#101827] to-[#111827] text-white p-6 pb-40">
       <section className="max-w-7xl mx-auto">
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-3">
@@ -408,6 +385,33 @@ export default function Home() {
         {/* Le chat en bas, façon ChatGPT */}
         <div className="mt-6">{chatPanel}</div>
       </section>
+
+      {/* Barre de saisie FIXE à l'écran (comme ChatGPT / Copilot) : reste visible même en scrollant */}
+      <div className="fixed inset-x-0 bottom-0 z-[2000] px-6 pb-5 pt-3 bg-gradient-to-t from-[#05060a] via-[#05060a]/90 to-transparent">
+        <div className="max-w-3xl mx-auto">
+          <div className="relative rounded-[26px] bg-[#0b1220]/95 backdrop-blur border border-white/15 focus-within:border-cyan-400/70 shadow-2xl transition">
+            <textarea
+              className="w-full max-h-40 min-h-[56px] bg-transparent px-5 py-4 pr-14 text-[15px] outline-none resize-none rounded-[26px]"
+              rows={1}
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              onKeyDown={onKeyDown}
+              placeholder="Réponds pour affiner (ex. « plutôt à Lyon », « 5 par ville »)…"
+            />
+            <button
+              onClick={() => send()}
+              disabled={loading || !input.trim()}
+              aria-label="Envoyer"
+              className="absolute right-2.5 bottom-2.5 h-9 w-9 rounded-full bg-cyan-400 text-black flex items-center justify-center hover:bg-cyan-300 disabled:opacity-40 disabled:cursor-not-allowed"
+            >
+              <Send size={16} />
+            </button>
+          </div>
+          <p className="text-center text-[11px] text-gray-500 mt-2">
+            Entrée pour envoyer · Maj+Entrée = nouvelle ligne
+          </p>
+        </div>
+      </div>
     </main>
   );
 }
