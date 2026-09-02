@@ -316,7 +316,7 @@ export default function Home() {
   // Le plan média (KPIs, recommandations, carte, analyses) s'affiche comme une pièce jointe
   // sous la réponse qui l'a généré — exactement comme une discussion avec un assistant.
   return (
-    <main className="min-h-screen bg-gradient-to-br from-[#05060a] via-[#101827] to-[#111827] text-white p-6 pb-40">
+    <main className="min-h-screen overflow-x-hidden bg-gradient-to-br from-[#05060a] via-[#101827] to-[#111827] text-white p-6 pb-44">
       <section className="max-w-5xl mx-auto pt-4">
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-2 text-cyan-300">
@@ -402,7 +402,10 @@ export default function Home() {
       </section>
 
       {/* Barre de saisie FIXE à l'écran (comme ChatGPT / Copilot) : reste visible même en scrollant */}
-      <div className="fixed inset-x-0 bottom-0 z-[2000] px-6 pb-5 pt-3 bg-gradient-to-t from-[#05060a] via-[#05060a]/90 to-transparent">
+      <div
+        className="fixed inset-x-0 bottom-0 z-[2000] px-6 pt-3 bg-gradient-to-t from-[#05060a] via-[#05060a]/90 to-transparent"
+        style={{ paddingBottom: "max(1.25rem, env(safe-area-inset-bottom))" }}
+      >
         <div className="max-w-3xl mx-auto">
           <div className="relative rounded-[26px] bg-[#0b1220]/95 backdrop-blur border border-white/15 focus-within:border-cyan-400/70 shadow-2xl transition">
             <textarea
