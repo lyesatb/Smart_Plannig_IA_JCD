@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { MapPin, Sparkles, BarChart3, Send, Monitor, Target, Zap, RotateCcw, User, Bot, Info } from "lucide-react";
 import dynamic from "next/dynamic";
 
@@ -65,6 +65,7 @@ export default function Home() {
   const [kpisLoading, setKpisLoading] = useState(true);
   const [apiBase, setApiBase] = useState<string | null>(null);
   const [showDetails, setShowDetails] = useState(false);
+  const latestUserRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     getApiBase().then(setApiBase);
@@ -80,10 +81,13 @@ export default function Home() {
       .finally(() => setKpisLoading(false));
   }, [apiBase]);
 
+  // Ancre le défilement sur TON dernier message envoyé (pas sur "le bas de page") :
+  // il reste en haut de l'écran même si le plan attaché change de taille en dessous
+  // (ancien plan retiré / nouveau plan ajouté) — évite les sauts de scroll.
   useEffect(() => {
     if (messages.length === 0) return;
     requestAnimationFrame(() => {
-      window.scrollTo({ top: document.documentElement.scrollHeight, behavior: "smooth" });
+      latestUserRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
     });
   }, [messages, loading]);
 
@@ -343,9 +347,17 @@ export default function Home() {
         {/* Fil de discussion — le prompt s'affiche immédiatement, la réponse juste après,
             et le plan (si généré) est attaché directement sous cette réponse. */}
         <div className="space-y-6">
-          {messages.map((m) => {
+          {messages.map((m, i) => {
+            // On ancre toujours sur TON dernier message envoyé (pas sur la réponse), pour
+            // que ton prompt reste en haut de l'écran avec sa réponse juste en dessous.
+            const isLastUserMessage =
+              m.role === "user" && !messages.slice(i + 1).some((x) => x.role === "user");
             if (m.role === "user") {
-              return <ChatBubble key={m.id} role="user" content={m.content} />;
+              return (
+                <div key={m.id} ref={isLastUserMessage ? latestUserRef : undefined}>
+                  <ChatBubble role="user" content={m.content} />
+                </div>
+              );
             }
             const hasPlan = (m.answer?.recommendation?.results?.length ?? 0) > 0;
             const isLatestPlan = hasPlan && m === lastAnswerMessage;
