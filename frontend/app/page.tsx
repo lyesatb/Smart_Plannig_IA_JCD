@@ -82,7 +82,7 @@ export default function Home() {
 
   useEffect(() => {
     const el = threadRef.current;
-    if (el) el.scrollTop = el.scrollHeight;
+    if (el) el.scrollTop = 0; // tour le plus récent en haut, juste sous la saisie
   }, [messages, loading]);
 
   // Dernière réponse contenant un plan : une simple discussion ne remplace pas le plan affiché.
@@ -165,6 +165,15 @@ export default function Home() {
 
   const showDashboard = !!lastAnswer;
 
+  // Regroupe la conversation par tour (prompt + sa réponse), le plus récent en premier :
+  // la saisie reste en haut et la dernière réponse s'affiche juste en dessous.
+  const turns: { user: ChatMessage; assistant?: ChatMessage }[] = [];
+  for (const m of messages) {
+    if (m.role === "user") turns.push({ user: m });
+    else if (turns.length) turns[turns.length - 1].assistant = m;
+  }
+  const orderedTurns = [...turns].reverse();
+
   const chatPanel = (
     <div className="glass rounded-3xl p-6 flex flex-col w-full">
       <div className="flex items-center justify-between mb-4">
@@ -181,74 +190,14 @@ export default function Home() {
         )}
       </div>
 
-      {messages.length > 0 && (
-        <div
-          ref={threadRef}
-          className="flex-1 overflow-auto space-y-3 mb-4 pr-1 min-h-[160px] max-h-[440px]"
-        >
-          {messages.map((m) => (
-            <ChatBubble key={m.id} role={m.role} content={m.content} />
-          ))}
-
-          {loading && (
-            <div className="flex items-center gap-2 text-sm text-cyan-200/80">
-              <Bot size={16} className="shrink-0" />
-              <span className="inline-flex gap-1">
-                <Dot /> <Dot /> <Dot />
-              </span>
-              <span className="text-gray-400">Analyse en cours…</span>
-            </div>
-          )}
-        </div>
-      )}
-
-      {messages.length === 0 && (
-        <div className="text-sm text-gray-400 space-y-4 mb-4">
-          <p className="leading-relaxed">
-            Décris ta campagne en langage naturel. Je génère un plan média, puis on l'affine
-            ensemble : tu peux répondre pour changer la ville, le budget, le POI, la cible ou le
-            nombre de panneaux (« 5 par ville »…).
-          </p>
-          <div className="space-y-2">
-            <p className="text-xs uppercase tracking-wide text-gray-500">Exemples</p>
-            {STARTER_PROMPTS.map((p) => (
-              <button
-                key={p}
-                onClick={() => send(p)}
-                className="block w-full text-left text-sm rounded-2xl border border-white/10 bg-black/30 px-3 py-2 hover:border-cyan-300/50 hover:text-white transition"
-              >
-                {p}
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {messages.length > 0 && !loading && (
-        <div className="flex flex-wrap gap-2 mb-3">
-          {FOLLOWUP_PROMPTS.map((p) => (
-            <button
-              key={p}
-              onClick={() => send(p)}
-              className="text-xs rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-gray-300 hover:border-cyan-300/50 hover:text-white transition"
-            >
-              {p}
-            </button>
-          ))}
-        </div>
-      )}
-
+      {/* Barre de saisie — toujours en haut */}
       <div className="rounded-2xl bg-black/40 border border-white/10 focus-within:border-cyan-400 transition">
         <textarea
-          className="w-full h-24 rounded-2xl bg-transparent p-3 text-sm outline-none resize-none"
+          className="w-full h-20 rounded-2xl bg-transparent p-3 text-sm outline-none resize-none"
           value={input}
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={onKeyDown}
-          placeholder={
-            messages.length === 0
-              ? "Ex. Campagne premium à Paris, cible CSP+, autour des gares…"
-              : "Réponds pour affiner (ex. « plutôt à Lyon », « 5 par ville »)…"
-          }
+          placeholder="Réponds pour affiner (ex. « plutôt à Lyon », « 5 par ville »)…"
         />
         <div className="flex items-center justify-between px-3 pb-3">
           <span className="text-[11px] text-gray-500">Entrée pour envoyer · Maj+Entrée = nouvelle ligne</span>
@@ -266,6 +215,45 @@ export default function Home() {
         <p className="mt-3 text-sm text-amber-300 bg-amber-400/10 border border-amber-300/30 rounded-2xl p-3">
           {chatError}
         </p>
+      )}
+
+      {messages.length > 0 && !loading && (
+        <div className="flex flex-wrap gap-2 mt-3">
+          {FOLLOWUP_PROMPTS.map((p) => (
+            <button
+              key={p}
+              onClick={() => send(p)}
+              className="text-xs rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-gray-300 hover:border-cyan-300/50 hover:text-white transition"
+            >
+              {p}
+            </button>
+          ))}
+        </div>
+      )}
+
+      {/* Conversation — la réponse s'affiche juste après le prompt (tour récent en haut) */}
+      {messages.length > 0 && (
+        <div
+          ref={threadRef}
+          className="flex-1 overflow-auto space-y-5 mt-4 pr-1 min-h-[160px] max-h-[440px]"
+        >
+          {orderedTurns.map((t, idx) => (
+            <div key={t.user.id} className="space-y-3">
+              <ChatBubble role="user" content={t.user.content} />
+              {t.assistant ? (
+                <ChatBubble role="assistant" content={t.assistant.content} />
+              ) : idx === 0 && loading ? (
+                <div className="flex items-center gap-2 text-sm text-cyan-200/80">
+                  <Bot size={16} className="shrink-0" />
+                  <span className="inline-flex gap-1">
+                    <Dot /> <Dot /> <Dot />
+                  </span>
+                  <span className="text-gray-400">Analyse en cours…</span>
+                </div>
+              ) : null}
+            </div>
+          ))}
+        </div>
       )}
 
       {lastAnswer && (
