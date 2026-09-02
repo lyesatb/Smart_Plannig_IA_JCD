@@ -82,7 +82,7 @@ export default function Home() {
 
   useEffect(() => {
     const el = threadRef.current;
-    if (el) el.scrollTop = 0; // tour le plus récent en haut, juste sous la saisie
+    if (el) el.scrollTop = el.scrollHeight; // façon ChatGPT : le plus récent en bas, près de la saisie
   }, [messages, loading]);
 
   // Dernière réponse contenant un plan : une simple discussion ne remplace pas le plan affiché.
@@ -165,15 +165,7 @@ export default function Home() {
 
   const showDashboard = !!lastAnswer;
 
-  // Regroupe la conversation par tour (prompt + sa réponse), le plus récent en premier :
-  // la saisie reste en haut et la dernière réponse s'affiche juste en dessous.
-  const turns: { user: ChatMessage; assistant?: ChatMessage }[] = [];
-  for (const m of messages) {
-    if (m.role === "user") turns.push({ user: m });
-    else if (turns.length) turns[turns.length - 1].assistant = m;
-  }
-  const orderedTurns = [...turns].reverse();
-
+  // Chat façon ChatGPT : le fil grandit vers le bas, la saisie reste ancrée en bas du panneau.
   const chatPanel = (
     <div className="glass rounded-3xl p-6 flex flex-col w-full">
       <div className="flex items-center justify-between mb-4">
@@ -190,8 +182,42 @@ export default function Home() {
         )}
       </div>
 
-      {/* Barre de saisie — toujours en haut */}
-      <div className="rounded-2xl bg-black/40 border border-white/10 focus-within:border-cyan-400 transition">
+      {/* Fil de discussion — le plus ancien en haut, le plus récent en bas (comme ChatGPT) */}
+      <div
+        ref={threadRef}
+        className="overflow-auto space-y-4 pr-1 min-h-[160px] max-h-[440px]"
+      >
+        {messages.map((m) => (
+          <ChatBubble key={m.id} role={m.role} content={m.content} />
+        ))}
+
+        {loading && (
+          <div className="flex items-center gap-2 text-sm text-cyan-200/80">
+            <Bot size={16} className="shrink-0" />
+            <span className="inline-flex gap-1">
+              <Dot /> <Dot /> <Dot />
+            </span>
+            <span className="text-gray-400">Analyse en cours…</span>
+          </div>
+        )}
+      </div>
+
+      {messages.length > 0 && !loading && (
+        <div className="flex flex-wrap gap-2 mt-4">
+          {FOLLOWUP_PROMPTS.map((p) => (
+            <button
+              key={p}
+              onClick={() => send(p)}
+              className="text-xs rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-gray-300 hover:border-cyan-300/50 hover:text-white transition"
+            >
+              {p}
+            </button>
+          ))}
+        </div>
+      )}
+
+      {/* Barre de saisie — ancrée en bas du chat */}
+      <div className="sticky bottom-0 mt-4 rounded-2xl bg-black/60 backdrop-blur border border-white/10 focus-within:border-cyan-400 transition">
         <textarea
           className="w-full h-20 rounded-2xl bg-transparent p-3 text-sm outline-none resize-none"
           value={input}
@@ -215,45 +241,6 @@ export default function Home() {
         <p className="mt-3 text-sm text-amber-300 bg-amber-400/10 border border-amber-300/30 rounded-2xl p-3">
           {chatError}
         </p>
-      )}
-
-      {messages.length > 0 && !loading && (
-        <div className="flex flex-wrap gap-2 mt-3">
-          {FOLLOWUP_PROMPTS.map((p) => (
-            <button
-              key={p}
-              onClick={() => send(p)}
-              className="text-xs rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-gray-300 hover:border-cyan-300/50 hover:text-white transition"
-            >
-              {p}
-            </button>
-          ))}
-        </div>
-      )}
-
-      {/* Conversation — la réponse s'affiche juste après le prompt (tour récent en haut) */}
-      {messages.length > 0 && (
-        <div
-          ref={threadRef}
-          className="flex-1 overflow-auto space-y-5 mt-4 pr-1 min-h-[160px] max-h-[440px]"
-        >
-          {orderedTurns.map((t, idx) => (
-            <div key={t.user.id} className="space-y-3">
-              <ChatBubble role="user" content={t.user.content} />
-              {t.assistant ? (
-                <ChatBubble role="assistant" content={t.assistant.content} />
-              ) : idx === 0 && loading ? (
-                <div className="flex items-center gap-2 text-sm text-cyan-200/80">
-                  <Bot size={16} className="shrink-0" />
-                  <span className="inline-flex gap-1">
-                    <Dot /> <Dot /> <Dot />
-                  </span>
-                  <span className="text-gray-400">Analyse en cours…</span>
-                </div>
-              ) : null}
-            </div>
-          ))}
-        </div>
       )}
 
       {lastAnswer && (
@@ -392,17 +379,15 @@ export default function Home() {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+        {/* Le plan média en haut : KPIs, recommandations, carte, analyses */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
           <Kpi icon={<Monitor />} label={dynamicKpis.k1Label} value={dynamicKpis.k1Value} />
           <Kpi icon={<Zap />} label={dynamicKpis.k2Label} value={dynamicKpis.k2Value} />
           <Kpi icon={<MapPin />} label={dynamicKpis.k3Label} value={dynamicKpis.k3Value} />
           <Kpi icon={<BarChart3 />} label={dynamicKpis.k4Label} value={dynamicKpis.k4Value} />
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="lg:col-span-1">{chatPanel}</div>
-          <div className="lg:col-span-2">{recommendationsPanel}</div>
-        </div>
+        {recommendationsPanel}
 
         <div className="glass rounded-3xl p-6 mt-6">
           <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
@@ -419,6 +404,9 @@ export default function Home() {
             panels={panels}
           />
         )}
+
+        {/* Le chat en bas, façon ChatGPT */}
+        <div className="mt-6">{chatPanel}</div>
       </section>
     </main>
   );
