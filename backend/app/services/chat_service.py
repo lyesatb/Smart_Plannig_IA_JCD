@@ -14,7 +14,7 @@ from app.tools.brief_utils import brief_to_scoring_criteria
 
 PLAN_KEYS = (
     "city", "cities", "target", "industry", "poi", "objective", "budget",
-    "top_k", "per_city", "city_quotas",
+    "top_k", "per_city", "city_quotas", "enseigne", "arrondissement", "max_distance_m",
 )
 
 
@@ -146,7 +146,11 @@ def _criteria_summary(c: dict[str, Any]) -> str:
     if c.get("cities"):
         bits.append("villes " + ", ".join(str(x) for x in c["cities"]))
     elif c.get("city"):
-        bits.append(str(c["city"]))
+        bits.append(str(c["city"]) + (f" {c['arrondissement']}e" if c.get("arrondissement") else ""))
+    if c.get("enseigne"):
+        bits.append(f"proximité des magasins {c['enseigne']}")
+    if c.get("max_distance_m"):
+        bits.append(f"rayon {c['max_distance_m']} m")
     if c.get("target"):
         bits.append("cible " + str(c["target"]))
     if c.get("industry"):
@@ -183,6 +187,9 @@ def _criteria_diff(
         ("top_k", "nombre de panneaux"),
         ("per_city", "panneaux par ville"),
         ("city_quotas", "répartition par ville"),
+        ("enseigne", "enseigne"),
+        ("arrondissement", "arrondissement"),
+        ("max_distance_m", "rayon (m)"),
     ]
     changes: list[str] = []
     for key, label in labels:
@@ -214,25 +221,34 @@ def build_assistant_reply(
             "Essaie d'élargir la ville, le POI ou le budget, et redis-moi ce que tu cherches."
         )
 
-    avg = recommendation.get("average_score")
-    reach = recommendation.get("estimated_daily_reach")
-    reach_txt = f"{int(reach):,}".replace(",", " ") if isinstance(reach, (int, float)) else "—"
+    def _fmt(v: Any) -> str:
+        return f"{int(v):,}".replace(",", " ") if isinstance(v, (int, float)) else "—"
 
-    intro = "J'ai ajusté le plan" if prior_criteria else "Voici un premier plan média"
+    reach = recommendation.get("estimated_daily_reach")
+    impressions = recommendation.get("estimated_impressions")
+    duration = recommendation.get("duration_days") or criteria.get("duration_days") or 14
+    dist = recommendation.get("distance_stats") or {}
+    enseigne = criteria.get("enseigne")
+
+    intro = "J'ai ajusté le dispositif" if prior_criteria else "Voici une première proposition de dispositif"
     parts = [f"{intro} ({_criteria_summary(criteria)})."]
 
     diff = _criteria_diff(prior_criteria, criteria)
     if diff:
         parts.append("Changements pris en compte : " + " ; ".join(diff) + ".")
 
-    parts.append(
-        f"{n} panneaux retenus, score moyen {avg}, reach estimé {reach_txt}/jour."
-    )
+    audience = f"{n} faces, ≈ {_fmt(reach)} passages/jour, soit ≈ {_fmt(impressions)} impressions sur {duration} jours"
+    if enseigne and dist:
+        audience += (
+            f" ; toutes les faces sont à moins de {dist.get('max_m')} m d'un magasin {enseigne} "
+            f"(distance moyenne {dist.get('avg_m')} m)"
+        )
+    parts.append(audience + ".")
     if extra_note:
         parts.append(extra_note)
     parts.append(
-        "Dis-moi si tu veux ajuster : ville, budget, POI/objectif, cible ou "
-        "le nombre de panneaux — j'affine le plan."
+        "Dites-moi si vous souhaitez ajuster : rayon autour des magasins, arrondissement, "
+        "segment d'audience ou nombre de faces — j'affine le dispositif."
     )
     return " ".join(parts)
 
@@ -269,25 +285,39 @@ def _plan_stats(recommendation: dict[str, Any] | None) -> dict[str, Any] | None:
     par_ville = dict(Counter(str(r.get("city")) for r in results if r.get("city")))
     poi_counts = Counter(str(r.get("poi_nearby")) for r in results if r.get("poi_nearby"))
     top_poi = poi_counts.most_common(1)[0][0] if poi_counts else None
-    sample = [
-        {
+    arrs = sorted({int(r["arrondissement"]) for r in results if r.get("arrondissement")})
+    sample = []
+    for r in results[:4]:
+        item: dict[str, Any] = {
             "ville": r.get("city"),
             "quartier": r.get("district"),
             "format": r.get("format"),
-            "poi": r.get("poi_nearby"),
-            "score": r.get("smart_score"),
+            "passages_jour": r.get("daily_traffic"),
+            "impressions": r.get("impressions"),
         }
-        for r in results[:3]
-    ]
-    return {
-        "n": len(results),
-        "score_moyen": recommendation.get("average_score"),
-        "reach_estime_jour": recommendation.get("estimated_daily_reach"),
-        "villes": cities,
-        "panneaux_par_ville": par_ville,
+        if r.get("arrondissement"):
+            item["arrondissement"] = r.get("arrondissement")
+        if r.get("distance_m") is not None:
+            item["distance_magasin_m"] = r.get("distance_m")
+            item["magasin_le_plus_proche"] = r.get("nearest_store")
+        sample.append(item)
+    stats: dict[str, Any] = {
+        "faces": len(results),
+        "agglomerations": cities,
+        "faces_par_ville": par_ville,
+        "audience_passages_jour": recommendation.get("estimated_daily_reach"),
+        "impressions_estimees": recommendation.get("estimated_impressions"),
+        "duree_jours": recommendation.get("duration_days"),
         "poi_dominant": top_poi,
-        "exemples_panneaux": sample,
+        "exemples_faces": sample,
     }
+    if arrs:
+        stats["arrondissements"] = arrs
+    if recommendation.get("distance_stats"):
+        stats["distance_aux_magasins_m"] = recommendation["distance_stats"]
+        stats["rayon_applique_m"] = recommendation.get("radius_m")
+        stats["nb_magasins_consideres"] = len(recommendation.get("stores") or [])
+    return stats
 
 
 _REPLY_SYSTEM = (
@@ -299,19 +329,25 @@ _REPLY_SYSTEM = (
     "'derniers_messages_assistant' dans le CONTEXTE, même si le sujet est proche (même ville, "
     "même type de plan…). Change l'angle, l'ordre des informations, la longueur. "
     "RÈGLE ABSOLUE : n'invente jamais de chiffres — utilise uniquement ceux du CONTEXTE. "
+    "Tu t'adresses à un CLIENT annonceur (vouvoiement). Ce qui l'intéresse : l'AUDIENCE "
+    "(passages/jour, impressions sur la durée), la DISTANCE des faces aux magasins de son enseigne, "
+    "l'arrondissement / la zone, et le nombre de faces. "
+    "INTERDIT : parler de « score », « smart score », « scoring » ou de note interne — ça ne veut "
+    "rien dire pour le client. Traduis toujours en bénéfice concret (audience, proximité, visibilité). "
     "Si 'plan_mis_a_jour' est vrai : dis ce qui a changé (voir 'changements' si présent) et donne "
-    "un aperçu utile du plan (villes, nombre de panneaux, score, reach) — choisis toi-même comment "
-    "le dire, sans formule figée. N'ajoute une piste d'amélioration que si elle est vraiment "
-    "spécifique à CE plan (jamais la même suggestion générique répétée à chaque tour). "
+    "un aperçu utile du dispositif (zone, nombre de faces, audience/impressions, distance aux magasins "
+    "si enseigne) — choisis toi-même comment le dire, sans formule figée. N'ajoute une piste "
+    "d'amélioration que si elle est vraiment spécifique à CE dispositif (jamais la même suggestion "
+    "générique répétée à chaque tour). "
     "Si 'plan_mis_a_jour' est faux : réponds UNIQUEMENT à ce que demande le client, sans reparler "
-    "du plan si ce n'est pas nécessaire. "
+    "du dispositif si ce n'est pas nécessaire. "
     "2 à 5 phrases, jamais de listes à puces, jamais de JSON — seulement ta réponse au client."
 )
 
 # Consignes de style tournantes : forcent une vraie variété d'un tour à l'autre,
 # sans dépendre uniquement de la température du modèle.
 _REPLY_STYLE_HINTS = (
-    "Commence directement par le chiffre le plus parlant (nombre de panneaux ou score), pas par une formule d'intro.",
+    "Commence directement par le chiffre le plus parlant (nombre de faces, impressions ou distance moyenne), pas par une formule d'intro.",
     "Commence par ce qui a changé dans la demande du client, avant de reparler du plan.",
     "Sois bref et direct, 2 phrases maximum, ton décontracté comme un collègue qui répond vite.",
     "Commence par répondre à l'intention du client, donne les chiffres seulement en 2e partie.",

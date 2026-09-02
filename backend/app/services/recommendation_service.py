@@ -1,11 +1,17 @@
 from pathlib import Path
 
+import numpy as np
 import pandas as pd
 
 from app.services.analytics import build_recommendation_analytics
+from app.services.geo import add_arrondissement_column, haversine_matrix_m, stores_for
 
 DATA_PATH = Path(__file__).resolve().parents[1] / "data" / "panels.csv"
-PANELS = pd.read_csv(DATA_PATH)
+PANELS = add_arrondissement_column(pd.read_csv(DATA_PATH))
+
+DEFAULT_RADIUS_M = 500
+# Rayons successifs si trop peu de faces autour des magasins (on élargit progressivement).
+RADIUS_STEPS_M = (500, 800, 1200, 2000, 3500)
 
 def normalize(series):
     min_v = series.min()
@@ -211,9 +217,61 @@ def _compute_scored_frames(criteria: dict):
     ineligible = df[df["maintenance_status"] != "ok"].copy()
     df = df[df["maintenance_status"] == "ok"].copy()
 
+    # Arrondissement (Paris) demandé dans le brief : « dans le 15ème »
+    arrondissement = criteria.get("arrondissement")
+    enseigne = criteria.get("enseigne")
+    if arrondissement and not enseigne and "arrondissement" in df.columns:
+        mask = (df["arrondissement"] == int(arrondissement)).fillna(False).astype(bool)
+        sub = df[mask]
+        if not sub.empty:
+            df = sub
+
     poi_tokens = poi_criterion_tokens(criteria)
     if poi_tokens:
         df = df[df.apply(lambda r: panel_matches_poi_criterion(r, poi_tokens), axis=1)]
+
+    if df.empty:
+        empty = df.copy()
+        return empty, empty, empty, criteria, ineligible
+
+    # Proximité d'une enseigne : distance de chaque face au magasin le plus proche
+    stores_used = None
+    radius_applied = None
+    if enseigne:
+        cities_l = [str(c) for c in (criteria.get("cities") or ([] if not city else [city])) if c]
+        stores = stores_for(enseigne, cities=cities_l or None, arrondissement=arrondissement)
+        if stores.empty and arrondissement:
+            stores = stores_for(enseigne, cities=cities_l or None)
+        if not stores.empty:
+            dist = haversine_matrix_m(
+                df["latitude"].to_numpy(float), df["longitude"].to_numpy(float),
+                stores["latitude"].to_numpy(float), stores["longitude"].to_numpy(float),
+            )
+            nearest_idx = dist.argmin(axis=1)
+            df["distance_m"] = np.round(dist.min(axis=1)).astype(int)
+            df["nearest_store"] = stores["name"].to_numpy()[nearest_idx]
+            df["nearest_store_address"] = stores["address"].to_numpy()[nearest_idx]
+
+            explicit = criteria.get("max_distance_m") is not None
+            wanted = int(criteria.get("max_distance_m") or DEFAULT_RADIUS_M)
+            want_k = int(criteria.get("top_k") or 12)
+            # Rayon demandé explicitement par le client → on le respecte dès qu'il y a au moins
+            # 3 faces ; sinon (rayon par défaut) on élargit jusqu'à pouvoir remplir le dispositif.
+            min_needed = 3 if explicit else max(6, min(want_k, 15))
+            steps = [wanted] + [r for r in RADIUS_STEPS_M if r > wanted]
+            within = df[df["distance_m"] <= wanted]
+            radius_applied = wanted
+            for r in steps:
+                within = df[df["distance_m"] <= r]
+                radius_applied = r
+                if len(within) >= min_needed:
+                    break
+            if not within.empty:
+                df = within.copy()
+            df["proximity_score"] = (
+                (1.0 - df["distance_m"].astype(float) / float(max(radius_applied, 1))).clip(0, 1) * 100
+            )
+            stores_used = stores
 
     df["availability_score"] = df["availability"].apply(lambda x: 100 if bool(x) else 0)
     df["audience_score"] = normalize(df["daily_traffic"])
@@ -230,16 +288,41 @@ def _compute_scored_frames(criteria: dict):
     df["visibility_component"] = df["visibility_score"]
     df["constraint_score"] = df.apply(constraint_score, axis=1)
 
-    df["smart_score"] = (
-        0.30 * df["availability_score"]
-        + 0.20 * df["audience_score"]
-        + 0.20 * df["target_match_score"]
-        + 0.15 * df["poi_score"]
-        + 0.10 * df["visibility_component"]
-        + 0.05 * df["constraint_score"]
-    ).round(2)
+    if "proximity_score" in df.columns:
+        # Brief de proximité : ce qui compte = audience + distance au magasin (+ dispo).
+        df["smart_score"] = (
+            0.25 * df["availability_score"]
+            + 0.35 * df["audience_score"]
+            + 0.25 * df["proximity_score"]
+            + 0.10 * df["target_match_score"]
+            + 0.05 * df["visibility_component"]
+        ).round(2)
+    else:
+        df["smart_score"] = (
+            0.30 * df["availability_score"]
+            + 0.20 * df["audience_score"]
+            + 0.20 * df["target_match_score"]
+            + 0.15 * df["poi_score"]
+            + 0.10 * df["visibility_component"]
+            + 0.05 * df["constraint_score"]
+        ).round(2)
+
+    if stores_used is not None:
+        criteria = {**criteria, "radius_m_applied": radius_applied}
 
     eligible = df.copy()
+    if stores_used is not None:
+        eligible.attrs["stores"] = [
+            {
+                "name": str(s["name"]),
+                "address": str(s["address"]),
+                "latitude": float(s["latitude"]),
+                "longitude": float(s["longitude"]),
+                "arrondissement": int(s["arrondissement"]) if pd.notna(s["arrondissement"]) else None,
+            }
+            for _, s in stores_used.iterrows()
+        ]
+        eligible.attrs["radius_m"] = radius_applied
 
     quota_map = _resolve_city_quotas(criteria, df)
     if quota_map:
@@ -408,27 +491,107 @@ def recommend_panels(criteria):
             "criteria": criteria,
         }
 
-    df["explanation"] = ""
-
     analytics = build_recommendation_analytics(eligible, pool, df, criteria, ineligible)
 
-    results = df[[
-        "panel_id", "city", "latitude", "longitude", "district", "format",
-        "screen_type", "visibility_score", "daily_traffic", "audience_csp_plus",
+    duration_days = int(criteria.get("duration_days") or 14)
+    df = df.copy()
+    df["impressions"] = (df["daily_traffic"].astype(float) * duration_days).round().astype(int)
+
+    # Explication par défaut (distance + audience, jamais de score). Le LLM peut la réécrire ensuite.
+    from app.tools.panel_copy_tool import _fallback_explanation
+
+    explanations: list[str] = []
+    total = len(df)
+    for i, (_, row) in enumerate(df.iterrows()):
+        panel = row.to_dict()
+        for k in ("distance_m", "arrondissement"):
+            v = panel.get(k)
+            if v is not None and not (isinstance(v, float) and pd.isna(v)) and v is not pd.NA:
+                panel[k] = int(v)
+            else:
+                panel[k] = None
+        explanations.append(
+            _fallback_explanation(panel, criteria, i, rank=i + 1, total=total, existing=explanations)
+        )
+    df["explanation"] = explanations
+    for col in ("distance_m", "nearest_store", "nearest_store_address"):
+        if col not in df.columns:
+            df[col] = None
+    if "arrondissement" not in df.columns:
+        df["arrondissement"] = None
+
+    cols = [
+        "panel_id", "city", "arrondissement", "latitude", "longitude", "district", "format",
+        "screen_type", "visibility_score", "daily_traffic", "impressions", "audience_csp_plus",
         "audience_young_active", "availability", "mall_name", "poi_nearby",
-        "price_per_day", "smart_score", "explanation",
-    ]].to_dict(orient="records")
+        "price_per_day", "distance_m", "nearest_store", "nearest_store_address",
+        "smart_score", "explanation",
+    ]
+    results = df[cols].to_dict(orient="records")
+    for r in results:
+        # JSON-friendly : NA pandas -> None, entiers propres
+        for k in ("arrondissement", "distance_m"):
+            v = r.get(k)
+            r[k] = None if v is None or (isinstance(v, float) and pd.isna(v)) or v is pd.NA else int(v)
+        for k in ("nearest_store", "nearest_store_address"):
+            v = r.get(k)
+            if v is None or (isinstance(v, float) and pd.isna(v)):
+                r[k] = None
 
     avg_score = round(sum([r["smart_score"] for r in results]) / len(results), 2) if results else 0
     reach = int(sum([r["daily_traffic"] for r in results]))
+    impressions = int(sum([r["impressions"] for r in results]))
+    agglomerations = sorted({r["city"] for r in results if r.get("city")})
+
+    stores = eligible.attrs.get("stores") if hasattr(eligible, "attrs") else None
+    radius_m = eligible.attrs.get("radius_m") if hasattr(eligible, "attrs") else None
+    dists = [r["distance_m"] for r in results if r.get("distance_m") is not None]
+    distance_stats = (
+        {
+            "min_m": int(min(dists)),
+            "max_m": int(max(dists)),
+            "avg_m": int(round(sum(dists) / len(dists))),
+        }
+        if dists
+        else None
+    )
+
+    enseigne = criteria.get("enseigne")
+    arr = criteria.get("arrondissement")
+    where = ", ".join(agglomerations) if agglomerations else "la zone demandée"
+    if arr and agglomerations == ["Paris"]:
+        where = f"Paris {arr}e"
+    def _fmt(n: int) -> str:
+        return f"{int(n):,}".replace(",", " ")
+
+    if enseigne and distance_stats:
+        summary = (
+            f"{len(results)} faces retenues à {where}, toutes à moins de {distance_stats['max_m']} m "
+            f"d'un magasin {enseigne} (distance moyenne {distance_stats['avg_m']} m). "
+            f"Audience estimée : {_fmt(reach)} passages/jour, soit ≈ {_fmt(impressions)} impressions "
+            f"sur {duration_days} jours."
+        )
+    else:
+        summary = (
+            f"{len(results)} faces retenues à {where}. Audience estimée : {_fmt(reach)} passages/jour, "
+            f"soit ≈ {_fmt(impressions)} impressions sur {duration_days} jours."
+        )
 
     return {
-        "summary": f"{len(results)} panneaux recommandés avec un score moyen de {avg_score}. Audience potentielle quotidienne estimée : {reach:,}.",
+        "summary": summary,
         "criteria": criteria,
         "eligible_count": int(len(eligible)),
         "pool_internal_count": int(len(pool)),
         "export_row_count": int(len(eligible)),
         "estimated_daily_reach": reach,
+        "estimated_impressions": impressions,
+        "duration_days": duration_days,
+        "faces": int(len(results)),
+        "agglomerations": agglomerations,
+        "agglomeration_count": len(agglomerations),
+        "distance_stats": distance_stats,
+        "radius_m": radius_m,
+        "stores": stores or [],
         "average_score": avg_score,
         "results": results,
         "analytics": analytics,

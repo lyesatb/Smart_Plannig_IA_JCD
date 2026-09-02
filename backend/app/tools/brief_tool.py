@@ -23,6 +23,9 @@ class Brief(BaseModel):
     top_k: int | None = None
     per_city: int | None = None
     city_quotas: dict[str, int] | None = None
+    enseigne: str | None = None
+    arrondissement: int | None = None
+    max_distance_m: int | None = None
 
 
 class BriefToolOutput(BaseModel):
@@ -38,7 +41,11 @@ _SYSTEM = (
     "Nombre de panneaux PAR ville : « 5 pour chaque » / « 5 par ville » → per_city=5. "
     "« 8 pour Lyon et 2 pour Paris » → city_quotas={\"Lyon\":8,\"Paris\":2}. "
     "Si « pour chaque / par ville » est présent, remplis per_city (et laisse city_quotas null) : "
-    "ignore les nombres qui décrivent un PLAN PRÉCÉDENT (ex. « tu avais mis 8 pour Lyon »)."
+    "ignore les nombres qui décrivent un PLAN PRÉCÉDENT (ex. « tu avais mis 8 pour Lyon »). "
+    "Proximité d'une enseigne / de magasins (ex. « à proximité des magasins Maison Nicolas ») → "
+    "enseigne=\"Nicolas\" (nom court de l'enseigne, sans « magasins »/« maison »). "
+    "Arrondissement de Paris (« dans le 15ème », « Paris 15 ») → arrondissement=15 et city=\"Paris\". "
+    "Rayon demandé (« à moins de 300 m », « dans un rayon de 1 km ») → max_distance_m en mètres ; sinon null."
 )
 
 _SYSTEM_CONVERSATION = (

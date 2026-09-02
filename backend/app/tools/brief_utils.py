@@ -4,6 +4,12 @@ import re
 from typing import Any
 
 from app.config.settings import get_settings
+from app.services.geo import (
+    normalize_enseigne,
+    parse_arrondissement,
+    parse_distance_m,
+    parse_enseigne,
+)
 
 CITY_NAMES = [
     "Paris", "Lyon", "Marseille", "Lille", "Bordeaux", "Toulouse", "Nantes",
@@ -108,6 +114,30 @@ def brief_to_scoring_criteria(brief: dict[str, Any], message: str = "") -> dict[
         if m:
             val = int(m.group(1))
             c["budget"] = val * 1000 if "k" in m.group(0).lower() else val
+
+    # Proximité d'une enseigne / arrondissement / rayon (« magasins Maison Nicolas dans le 15ème »)
+    # Le dernier message prime ; sinon on garde les valeurs héritées (LLM ou tour précédent).
+    ens_msg = parse_enseigne(message)
+    if ens_msg:
+        c["enseigne"] = ens_msg
+    elif c.get("enseigne"):
+        c["enseigne"] = normalize_enseigne(c.get("enseigne")) or c.get("enseigne")
+
+    arr_msg = parse_arrondissement(message)
+    if arr_msg:
+        c["arrondissement"] = arr_msg
+        # Un arrondissement implique Paris si aucune ville n'est citée
+        if not c.get("city") and not c.get("cities"):
+            c["city"] = "Paris"
+    elif c.get("arrondissement") is not None:
+        try:
+            c["arrondissement"] = int(c["arrondissement"])
+        except (TypeError, ValueError):
+            c["arrondissement"] = None
+
+    dist_msg = parse_distance_m(message)
+    if dist_msg:
+        c["max_distance_m"] = dist_msg
 
     # Nombre de panneaux par ville (« 5 pour chaque », « 8 pour Lyon et 2 pour Paris »)
     # Le dernier message prime toujours sur les valeurs héritées du tour précédent.
