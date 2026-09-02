@@ -88,16 +88,16 @@ export default function Home() {
   }, [messages, loading]);
 
   // Dernière réponse contenant un plan : une simple discussion ne remplace pas le plan affiché.
-  const lastAnswer =
+  const lastAnswerMessage =
     [...messages]
       .reverse()
       .find(
         (m) =>
           m.role === "assistant" &&
           (m.answer?.recommendation?.results?.length ?? 0) > 0
-      )?.answer ?? null;
+      ) ?? null;
+  const lastAnswer = lastAnswerMessage?.answer ?? null;
   const panels: Panel[] = lastAnswer?.recommendation?.results || [];
-  const dynamicKpis = buildDynamicKpis(kpis, lastAnswer);
 
   async function send(text?: string) {
     const content = (text ?? input).trim();
@@ -165,140 +165,92 @@ export default function Home() {
     }
   }
 
-  const showDashboard = !!lastAnswer;
+  // Une fois qu'un message est envoyé, on quitte l'accueil pour la vue conversation
+  // (le prompt s'affiche immédiatement, même pendant le premier chargement).
+  const showConversation = messages.length > 0;
 
-  // Chat façon ChatGPT : le fil grandit vers le bas, la saisie reste ancrée en bas du panneau.
-  const chatPanel = (
-    <div className="glass rounded-3xl p-6 flex flex-col w-full">
-      <div className="flex items-center justify-between mb-4">
-        <h2 className="text-xl font-semibold flex items-center gap-2">
-          <Sparkles className="text-cyan-300" /> Assistant IA
-        </h2>
-        <div className="flex items-center gap-3">
-          {lastAnswer && (
-            <button
-              onClick={() => setShowDetails((v) => !v)}
-              title="Détails techniques (moteur IA, critères)"
-              className={`text-xs flex items-center gap-1 ${
-                showDetails ? "text-cyan-300" : "text-gray-500 hover:text-cyan-300"
-              }`}
-            >
-              <Info size={14} />
-            </button>
-          )}
-          {messages.length > 0 && (
-            <button
-              onClick={resetConversation}
-              className="text-xs text-gray-400 hover:text-cyan-300 flex items-center gap-1"
-            >
-              <RotateCcw size={14} /> Nouvelle discussion
-            </button>
-          )}
+  // Plan média attaché directement sous la réponse qui l'a généré (comme une pièce jointe
+  // dans la discussion), au lieu d'un gros tableau de bord séparé au-dessus du chat.
+  function renderPlanAttachment(answer: any) {
+    const p: Panel[] = answer?.recommendation?.results || [];
+    const dk = buildDynamicKpis(kpis, answer);
+    return (
+      <div className="mt-3 space-y-5">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          <Kpi icon={<Monitor />} label={dk.k1Label} value={dk.k1Value} />
+          <Kpi icon={<Zap />} label={dk.k2Label} value={dk.k2Value} />
+          <Kpi icon={<MapPin />} label={dk.k3Label} value={dk.k3Value} />
+          <Kpi icon={<BarChart3 />} label={dk.k4Label} value={dk.k4Value} />
         </div>
-      </div>
 
-      {/* Fil de discussion — le plus ancien en haut, le plus récent en bas (comme ChatGPT) */}
-      <div className="space-y-4">
-        {messages.map((m) => (
-          <ChatBubble key={m.id} role={m.role} content={m.content} />
-        ))}
-
-        {loading && (
-          <div className="flex items-center gap-2 text-sm text-cyan-200/80">
-            <Bot size={16} className="shrink-0" />
-            <span className="inline-flex gap-1">
-              <Dot /> <Dot /> <Dot />
-            </span>
-            <span className="text-gray-400">Analyse en cours…</span>
+        <div className="glass rounded-3xl p-6">
+          <h3 className="text-lg font-semibold flex items-center gap-2 mb-4">
+            <Target className="text-cyan-300" size={18} /> Recommandations IA
+          </h3>
+          <div className="mb-4 p-4 rounded-2xl bg-cyan-400/10 border border-cyan-300/20 text-cyan-100 text-sm">
+            {answer.recommendation.summary}
           </div>
-        )}
-      </div>
-
-      {messages.length > 0 && !loading && (
-        <div className="flex flex-wrap gap-2 mt-4">
-          {FOLLOWUP_PROMPTS.map((p) => (
-            <button
-              key={p}
-              onClick={() => send(p)}
-              className="text-xs rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-gray-300 hover:border-cyan-300/50 hover:text-white transition"
-            >
-              {p}
-            </button>
-          ))}
-        </div>
-      )}
-
-      {chatError && (
-        <p className="mt-3 text-sm text-amber-300 bg-amber-400/10 border border-amber-300/30 rounded-2xl p-3">
-          {chatError}
-        </p>
-      )}
-
-      {showDetails && lastAnswer && (
-        <div className="mt-6 text-sm text-gray-300">
-          {lastAnswer.meta && <EngineMeta meta={lastAnswer.meta} />}
-          <details className="rounded-xl border border-white/10 bg-black/25 text-xs">
-            <summary className="cursor-pointer list-none px-3 py-2.5 text-white font-semibold select-none">
-              Critères extraits
-            </summary>
-            <pre className="bg-black/40 rounded-b-2xl p-4 overflow-auto text-cyan-100">
-              {JSON.stringify(lastAnswer.extracted_criteria, null, 2)}
-            </pre>
-          </details>
-        </div>
-      )}
-    </div>
-  );
-
-  const recommendationsPanel = (
-    <div className="glass rounded-3xl p-6 h-full">
-      <h2 className="text-xl font-semibold flex items-center gap-2 mb-4">
-        <Target className="text-cyan-300" /> Recommandations IA
-      </h2>
-
-      {!lastAnswer && (
-        <div className="h-96 flex items-center justify-center text-gray-400 border border-dashed border-white/20 rounded-3xl text-center px-6">
-          {loading ? "Génération du plan média en cours…" : "Le plan média s'affichera ici."}
-        </div>
-      )}
-
-      {lastAnswer && (
-        <>
-          <div className="mb-4 p-4 rounded-2xl bg-cyan-400/10 border border-cyan-300/20 text-cyan-100">
-            {lastAnswer.recommendation.summary}
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-h-[620px] overflow-auto pr-2">
-            {panels.map((p) => (
-              <div key={p.panel_id} className="rounded-2xl bg-black/35 border border-white/10 p-4 hover:border-cyan-300/50 transition">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {p.map((panel) => (
+              <div key={panel.panel_id} className="rounded-2xl bg-black/35 border border-white/10 p-4 hover:border-cyan-300/50 transition">
                 <div className="flex justify-between items-start">
                   <div>
-                    <p className="font-bold">{p.city} — {p.district}</p>
-                    <p className="text-xs text-gray-400">{p.format} · POI : {p.poi_nearby}</p>
+                    <p className="font-bold">{panel.city} — {panel.district}</p>
+                    <p className="text-xs text-gray-400">{panel.format} · POI : {panel.poi_nearby}</p>
                   </div>
                   <div className="text-right">
-                    <p className="text-2xl font-bold text-cyan-300">{p.smart_score}</p>
+                    <p className="text-2xl font-bold text-cyan-300">{panel.smart_score}</p>
                     <p className="text-xs text-gray-400">score</p>
                   </div>
                 </div>
                 <div className="grid grid-cols-3 gap-2 my-4 text-xs">
-                  <Mini label="Trafic" value={p.daily_traffic.toLocaleString()} />
-                  <Mini label="CSP+" value={Math.round(p.audience_csp_plus) + "%"} />
-                  <Mini label="Visibilité" value={Math.round(p.visibility_score) + "%"} />
+                  <Mini label="Trafic" value={panel.daily_traffic.toLocaleString()} />
+                  <Mini label="CSP+" value={Math.round(panel.audience_csp_plus) + "%"} />
+                  <Mini label="Visibilité" value={Math.round(panel.visibility_score) + "%"} />
                 </div>
-                {p.explanation?.trim() ? (
-                  <p className="text-sm text-gray-300 leading-relaxed">{p.explanation}</p>
+                {panel.explanation?.trim() ? (
+                  <p className="text-sm text-gray-300 leading-relaxed">{panel.explanation}</p>
                 ) : null}
               </div>
             ))}
           </div>
-        </>
-      )}
-    </div>
-  );
+        </div>
+
+        <div className="glass rounded-3xl p-6">
+          <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+            <MapPin className="text-cyan-300" size={18} /> Carte interactive
+          </h3>
+          <MapView panels={p} />
+        </div>
+
+        {answer?.recommendation?.analytics && apiBase && (
+          <AnalyticsSection
+            apiBase={apiBase}
+            analytics={answer.recommendation.analytics}
+            criteria={(answer.extracted_criteria || answer.recommendation?.criteria) as Record<string, unknown>}
+            panels={p}
+          />
+        )}
+
+        {showDetails && (
+          <div className="text-sm text-gray-300">
+            {answer.meta && <EngineMeta meta={answer.meta} />}
+            <details className="rounded-xl border border-white/10 bg-black/25 text-xs">
+              <summary className="cursor-pointer list-none px-3 py-2.5 text-white font-semibold select-none">
+                Critères extraits
+              </summary>
+              <pre className="bg-black/40 rounded-b-2xl p-4 overflow-auto text-cyan-100">
+                {JSON.stringify(answer.extracted_criteria, null, 2)}
+              </pre>
+            </details>
+          </div>
+        )}
+      </div>
+    );
+  }
 
   // Écran d'accueil minimaliste façon ChatGPT : juste une barre de saisie centrée.
-  if (!showDashboard) {
+  if (!showConversation) {
     return (
       <main className="min-h-screen bg-gradient-to-br from-[#05060a] via-[#101827] to-[#111827] text-white p-6">
         <div className="min-h-[calc(100vh-3rem)] flex flex-col items-center justify-center">
@@ -356,48 +308,85 @@ export default function Home() {
     );
   }
 
-  // Tableau de bord complet, une fois qu'un plan est généré.
+  // Vue conversation : la discussion est le contenu principal, visible dès le 1er message.
+  // Le plan média (KPIs, recommandations, carte, analyses) s'affiche comme une pièce jointe
+  // sous la réponse qui l'a généré — exactement comme une discussion avec un assistant.
   return (
     <main className="min-h-screen bg-gradient-to-br from-[#05060a] via-[#101827] to-[#111827] text-white p-6 pb-40">
-      <section className="max-w-7xl mx-auto">
+      <section className="max-w-5xl mx-auto pt-4">
         <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center gap-3">
-            <Sparkles className="text-cyan-300" size={26} />
-            <div>
-              <h1 className="text-2xl md:text-3xl font-bold leading-tight">Smart Planning IA</h1>
-              <p className="text-[11px] text-gray-400 uppercase tracking-[0.2em]">Retail Media Intelligence</p>
-            </div>
+          <div className="flex items-center gap-2 text-cyan-300">
+            <Sparkles size={20} />
+            <span className="font-semibold text-white text-lg">Smart Planning IA</span>
+          </div>
+          <div className="flex items-center gap-4">
+            {lastAnswer && (
+              <button
+                onClick={() => setShowDetails((v) => !v)}
+                title="Détails techniques (moteur IA, critères)"
+                className={`text-xs flex items-center gap-1 ${
+                  showDetails ? "text-cyan-300" : "text-gray-500 hover:text-cyan-300"
+                }`}
+              >
+                <Info size={14} />
+              </button>
+            )}
+            <button
+              onClick={resetConversation}
+              className="text-xs text-gray-400 hover:text-cyan-300 flex items-center gap-1"
+            >
+              <RotateCcw size={14} /> Nouvelle discussion
+            </button>
           </div>
         </div>
 
-        {/* Le plan média en haut : KPIs, recommandations, carte, analyses */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-          <Kpi icon={<Monitor />} label={dynamicKpis.k1Label} value={dynamicKpis.k1Value} />
-          <Kpi icon={<Zap />} label={dynamicKpis.k2Label} value={dynamicKpis.k2Value} />
-          <Kpi icon={<MapPin />} label={dynamicKpis.k3Label} value={dynamicKpis.k3Value} />
-          <Kpi icon={<BarChart3 />} label={dynamicKpis.k4Label} value={dynamicKpis.k4Value} />
+        {/* Fil de discussion — le prompt s'affiche immédiatement, la réponse juste après,
+            et le plan (si généré) est attaché directement sous cette réponse. */}
+        <div className="space-y-6">
+          {messages.map((m) => {
+            if (m.role === "user") {
+              return <ChatBubble key={m.id} role="user" content={m.content} />;
+            }
+            const hasPlan = (m.answer?.recommendation?.results?.length ?? 0) > 0;
+            const isLatestPlan = hasPlan && m === lastAnswerMessage;
+            return (
+              <div key={m.id}>
+                <ChatBubble role="assistant" content={m.content} />
+                {isLatestPlan && renderPlanAttachment(m.answer)}
+              </div>
+            );
+          })}
+
+          {loading && (
+            <div className="flex items-center gap-2 text-sm text-cyan-200/80">
+              <Bot size={16} className="shrink-0" />
+              <span className="inline-flex gap-1">
+                <Dot /> <Dot /> <Dot />
+              </span>
+              <span className="text-gray-400">Analyse en cours…</span>
+            </div>
+          )}
         </div>
 
-        {recommendationsPanel}
-
-        <div className="glass rounded-3xl p-6 mt-6">
-          <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
-            <MapPin className="text-cyan-300" /> Carte interactive
-          </h2>
-          <MapView panels={panels} />
-        </div>
-
-        {lastAnswer?.recommendation?.analytics && apiBase && (
-          <AnalyticsSection
-            apiBase={apiBase}
-            analytics={lastAnswer.recommendation.analytics}
-            criteria={(lastAnswer.extracted_criteria || lastAnswer.recommendation?.criteria) as Record<string, unknown>}
-            panels={panels}
-          />
+        {messages.length > 0 && !loading && (
+          <div className="flex flex-wrap gap-2 mt-6">
+            {FOLLOWUP_PROMPTS.map((p) => (
+              <button
+                key={p}
+                onClick={() => send(p)}
+                className="text-xs rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-gray-300 hover:border-cyan-300/50 hover:text-white transition"
+              >
+                {p}
+              </button>
+            ))}
+          </div>
         )}
 
-        {/* Le chat en bas, façon ChatGPT */}
-        <div className="mt-6">{chatPanel}</div>
+        {chatError && (
+          <p className="mt-4 text-sm text-amber-300 bg-amber-400/10 border border-amber-300/30 rounded-2xl p-3">
+            {chatError}
+          </p>
+        )}
       </section>
 
       {/* Barre de saisie FIXE à l'écran (comme ChatGPT / Copilot) : reste visible même en scrollant */}
