@@ -40,8 +40,10 @@ type Recommendation = {
   agglomerations?: string[];
   agglomeration_count?: number;
   estimated_impressions?: number;
-  estimated_daily_reach?: number;
+  estimated_weekly_reach?: number;
+  estimated_budget?: number;
   duration_days?: number;
+  duration_weeks?: number;
   distance_stats?: { min_m: number; max_m: number; avg_m: number } | null;
   radius_m?: number | null;
   stores?: Store[];
@@ -58,9 +60,6 @@ type ChatMessage = {
 
 const DEFAULT_PROMPT =
   "Je veux une campagne en proximité des magasins Maison Nicolas dans le 15ème arrondissement de Paris";
-
-// Budget indicatif du dispositif (POC) — brique demandée à côté des impressions.
-const BUDGET_EUR = 2500;
 
 const PLAN_KEYS = [
   "city", "cities", "target", "industry", "budget", "duration_days", "objective", "poi",
@@ -269,20 +268,27 @@ export default function Home() {
   function preReserve() {
     if (!plan) return;
     const faces = rec?.faces ?? panels.length;
+    const w = rec?.duration_weeks;
+    const durTxt = typeof w === "number" ? `${w} semaine${w >= 2 ? "s" : ""}` : `${rec?.duration_days ?? 14} jours`;
+    const budgetTxt = typeof budget === "number" ? `, budget ${fmtInt(budget)} €` : "";
     setNote(
-      `Pré-réservation enregistrée (démo) : ${faces} faces, ${fmtCompact(rec?.estimated_impressions)} impressions estimées sur ${rec?.duration_days ?? 14} jours.`,
+      `Pré-réservation enregistrée (démo) : ${faces} faces, ${fmtCompact(rec?.estimated_impressions)} impressions sur ${durTxt}${budgetTxt}.`,
     );
   }
 
-  const agglos = rec?.agglomeration_count ?? (rec ? new Set(panels.map((p) => p.city)).size : 0);
   const facesCount = rec?.faces ?? panels.length;
   const impressions = rec?.estimated_impressions;
+  const budget = rec?.estimated_budget;
+  const weeks = rec?.duration_weeks;
+  const durationLabel =
+    typeof weeks === "number" ? `${weeks} sem.` : rec?.duration_days ? `${rec.duration_days} j` : "—";
 
   const enseigneValue = (criteria.enseigne as string) || "";
   const arrValue = criteria.arrondissement ? String(criteria.arrondissement) : "";
   const distValue = criteria.max_distance_m ? String(criteria.max_distance_m) : "";
   const targetValue = (criteria.target as string) || "";
   const topKValue = criteria.top_k ? String(criteria.top_k) : "";
+  const durDaysValue = criteria.duration_days ? String(criteria.duration_days) : "";
 
   return (
     <main className="min-h-screen p-5 md:p-8">
@@ -402,7 +408,7 @@ export default function Home() {
                         </div>
                         <div className="text-xs text-white/80 mt-1">
                           {p.nearest_store ? `${p.nearest_store} · ` : ""}
-                          {fmtInt(p.daily_traffic)} passages/jour
+                          {fmtInt(p.daily_traffic)} passages/semaine
                           {typeof p.impressions === "number" ? ` · ≈ ${fmtCompact(p.impressions)} impressions` : ""}
                         </div>
                         {p.explanation?.trim() && (
@@ -419,11 +425,11 @@ export default function Home() {
           {/* Colonne centrale : KPIs + carto */}
           <div className="lg:col-span-6 flex flex-col gap-5">
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <Chip value={rec ? String(agglos) : "—"} label={agglos > 1 ? "agglomérations" : "agglomération"} />
+              <Chip value={rec ? durationLabel : "—"} label="durée de campagne" />
               <Chip value={rec ? fmtInt(facesCount) : "—"} label="faces" />
               <Chip value={rec ? fmtCompact(impressions) : "—"} label="impressions" />
               <Chip
-                value={rec ? `${new Intl.NumberFormat("fr-FR").format(BUDGET_EUR)} €` : "—"}
+                value={rec && typeof budget === "number" ? `${fmtInt(budget)} €` : "—"}
                 label="budget"
               />
             </div>
@@ -527,6 +533,21 @@ export default function Home() {
                 {[6, 8, 10, 12, 15].map((n) => (
                   <option key={n} value={n}>
                     {n} faces
+                  </option>
+                ))}
+              </select>
+            </FilterBox>
+
+            <FilterBox label="Durée de campagne">
+              <select
+                value={durDaysValue}
+                onChange={(e) => applyFilter({ duration_days: e.target.value ? Number(e.target.value) : null })}
+                className="jcd-select"
+              >
+                <option value="">Durée (2 sem. par défaut)</option>
+                {[1, 2, 3, 4, 6, 8].map((w) => (
+                  <option key={w} value={w * 7}>
+                    {w} semaine{w > 1 ? "s" : ""}
                   </option>
                 ))}
               </select>

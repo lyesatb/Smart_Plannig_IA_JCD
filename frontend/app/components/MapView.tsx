@@ -127,7 +127,7 @@ function PanelPopup({ p }: { p: Panel }) {
         )}
         {typeof p.daily_traffic === 'number' && (
           <div className="mt-1">
-            Audience : <b>{fmtInt(p.daily_traffic)}</b> passages/jour
+            Audience : <b>{fmtInt(p.daily_traffic)}</b> passages/semaine
             {typeof p.impressions === 'number' ? ` · ≈ ${fmtInt(p.impressions)} impressions` : ''}
           </div>
         )}
