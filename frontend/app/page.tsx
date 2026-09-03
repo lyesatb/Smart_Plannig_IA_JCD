@@ -40,7 +40,7 @@ type Recommendation = {
   agglomerations?: string[];
   agglomeration_count?: number;
   estimated_impressions?: number;
-  estimated_weekly_reach?: number;
+  estimated_daily_reach?: number;
   estimated_budget?: number;
   duration_days?: number;
   duration_weeks?: number;
@@ -268,8 +268,7 @@ export default function Home() {
   function preReserve() {
     if (!plan) return;
     const faces = rec?.faces ?? panels.length;
-    const w = rec?.duration_weeks;
-    const durTxt = typeof w === "number" ? `${w} semaine${w >= 2 ? "s" : ""}` : `${rec?.duration_days ?? 14} jours`;
+    const durTxt = `${rec?.duration_days ?? 7} jours`;
     const budgetTxt = typeof budget === "number" ? `, budget ${fmtInt(budget)} €` : "";
     setNote(
       `Pré-réservation enregistrée (démo) : ${faces} faces, ${fmtCompact(rec?.estimated_impressions)} impressions sur ${durTxt}${budgetTxt}.`,
@@ -279,9 +278,7 @@ export default function Home() {
   const facesCount = rec?.faces ?? panels.length;
   const impressions = rec?.estimated_impressions;
   const budget = rec?.estimated_budget;
-  const weeks = rec?.duration_weeks;
-  const durationLabel =
-    typeof weeks === "number" ? `${weeks} sem.` : rec?.duration_days ? `${rec.duration_days} j` : "—";
+  const durationLabel = rec?.duration_days ? `${rec.duration_days} j` : "—";
 
   const enseigneValue = (criteria.enseigne as string) || "";
   const arrValue = criteria.arrondissement ? String(criteria.arrondissement) : "";
@@ -408,7 +405,7 @@ export default function Home() {
                         </div>
                         <div className="text-xs text-white/80 mt-1">
                           {p.nearest_store ? `${p.nearest_store} · ` : ""}
-                          {fmtInt(p.daily_traffic)} passages/semaine
+                          {fmtInt(p.daily_traffic)} passages/jour
                           {typeof p.impressions === "number" ? ` · ≈ ${fmtCompact(p.impressions)} impressions` : ""}
                         </div>
                         {p.explanation?.trim() && (
@@ -544,10 +541,10 @@ export default function Home() {
                 onChange={(e) => applyFilter({ duration_days: e.target.value ? Number(e.target.value) : null })}
                 className="jcd-select"
               >
-                <option value="">Durée (2 sem. par défaut)</option>
-                {[1, 2, 3, 4, 6, 8].map((w) => (
-                  <option key={w} value={w * 7}>
-                    {w} semaine{w > 1 ? "s" : ""}
+                <option value="">7 jours (par défaut)</option>
+                {[7, 14, 21, 28].map((d) => (
+                  <option key={d} value={d}>
+                    {d} jours ({d / 7} sem.)
                   </option>
                 ))}
               </select>
