@@ -514,14 +514,14 @@ def recommend_panels(criteria):
             _fallback_explanation(panel, criteria, i, rank=i + 1, total=total, existing=explanations)
         )
     df["explanation"] = explanations
-    for col in ("distance_m", "nearest_store", "nearest_store_address"):
+    for col in ("distance_m", "nearest_store", "nearest_store_address", "address"):
         if col not in df.columns:
             df[col] = None
     if "arrondissement" not in df.columns:
         df["arrondissement"] = None
 
     cols = [
-        "panel_id", "city", "arrondissement", "latitude", "longitude", "district", "format",
+        "panel_id", "city", "arrondissement", "latitude", "longitude", "address", "district", "format",
         "screen_type", "visibility_score", "daily_traffic", "impressions", "audience_csp_plus",
         "audience_young_active", "availability", "mall_name", "poi_nearby",
         "price_per_day", "distance_m", "nearest_store", "nearest_store_address",
@@ -533,7 +533,7 @@ def recommend_panels(criteria):
         for k in ("arrondissement", "distance_m"):
             v = r.get(k)
             r[k] = None if v is None or (isinstance(v, float) and pd.isna(v)) or v is pd.NA else int(v)
-        for k in ("nearest_store", "nearest_store_address"):
+        for k in ("nearest_store", "nearest_store_address", "address"):
             v = r.get(k)
             if v is None or (isinstance(v, float) and pd.isna(v)):
                 r[k] = None

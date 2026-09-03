@@ -71,16 +71,28 @@ def nearest_arrondissement(lat: float, lon: float) -> int | None:
 
 
 def add_arrondissement_column(panels: pd.DataFrame) -> pd.DataFrame:
-    """Ajoute `arrondissement` (Paris uniquement, None ailleurs)."""
-    arr = [None] * len(panels)
-    is_paris = panels["city"].astype(str).str.lower() == "paris"
-    for i, (flag, lat, lon) in enumerate(
-        zip(is_paris.tolist(), panels["latitude"].tolist(), panels["longitude"].tolist())
-    ):
-        if flag:
-            arr[i] = nearest_arrondissement(float(lat), float(lon))
+    """Ajoute/normalise `arrondissement` (Paris uniquement, None ailleurs).
+
+    Utilise la colonne existante (arrondissement réel de la base) si présente ;
+    complète par géolocalisation les lignes Paris qui n'en ont pas.
+    """
     out = panels.copy()
-    out["arrondissement"] = pd.array(arr, dtype="Int64")
+    is_paris = out["city"].astype(str).str.lower() == "paris"
+
+    if "arrondissement" in out.columns:
+        arr = pd.to_numeric(out["arrondissement"], errors="coerce").astype("Int64")
+    else:
+        arr = pd.array([pd.NA] * len(out), dtype="Int64")
+
+    values = list(arr)
+    for i, (flag, val, lat, lon) in enumerate(
+        zip(is_paris.tolist(), values, out["latitude"].tolist(), out["longitude"].tolist())
+    ):
+        if flag and (val is pd.NA or pd.isna(val)):
+            values[i] = nearest_arrondissement(float(lat), float(lon))
+        elif not flag:
+            values[i] = pd.NA
+    out["arrondissement"] = pd.array(values, dtype="Int64")
     return out
 
 
