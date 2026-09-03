@@ -19,6 +19,7 @@ type Panel = {
   distance_m?: number | null;
   nearest_store?: string | null;
   arrondissement?: number | null;
+  address?: string | null;
 };
 
 export type Store = {
@@ -118,7 +119,7 @@ function PanelPopup({ p }: { p: Panel }) {
           {p.format} — {p.city}
           {p.arrondissement ? ` ${p.arrondissement}e` : ''}
         </div>
-        <div className="opacity-80">{p.district}</div>
+        <div className="opacity-80">{p.address || p.district}</div>
         {p.distance_m != null && (
           <div className="mt-1">
             <b>{fmtInt(p.distance_m)} m</b> du {p.nearest_store || 'magasin'}

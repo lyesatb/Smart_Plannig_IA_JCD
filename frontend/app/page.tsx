@@ -29,6 +29,7 @@ type Panel = {
   distance_m?: number | null;
   nearest_store?: string | null;
   nearest_store_address?: string | null;
+  address?: string | null;
   explanation?: string;
 };
 
@@ -57,6 +58,9 @@ type ChatMessage = {
 
 const DEFAULT_PROMPT =
   "Je veux une campagne en proximité des magasins Maison Nicolas dans le 15ème arrondissement de Paris";
+
+// Budget indicatif du dispositif (POC) — brique demandée à côté des impressions.
+const BUDGET_EUR = 2500;
 
 const PLAN_KEYS = [
   "city", "cities", "target", "industry", "budget", "duration_days", "objective", "poi",
@@ -392,6 +396,7 @@ export default function Home() {
                             </div>
                           )}
                         </div>
+                        {p.address && <div className="text-xs text-white/70 mt-0.5">{p.address}</div>}
                         <div className="text-xs text-white/80 mt-1">
                           {p.nearest_store ? `${p.nearest_store} · ` : ""}
                           {fmtInt(p.daily_traffic)} passages/jour
@@ -410,10 +415,14 @@ export default function Home() {
 
           {/* Colonne centrale : KPIs + carto */}
           <div className="lg:col-span-6 flex flex-col gap-5">
-            <div className="grid grid-cols-3 gap-4">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               <Chip value={rec ? String(agglos) : "—"} label={agglos > 1 ? "agglomérations" : "agglomération"} />
               <Chip value={rec ? fmtInt(facesCount) : "—"} label="faces" />
               <Chip value={rec ? fmtCompact(impressions) : "—"} label="impressions" />
+              <Chip
+                value={rec ? `${new Intl.NumberFormat("fr-FR").format(BUDGET_EUR)} €` : "—"}
+                label="budget"
+              />
             </div>
             <section className="jcd-block p-2 relative">
               {(loading || filtering) && (
