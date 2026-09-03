@@ -23,7 +23,7 @@ class RecommendationRequest(BaseModel):
     target: Optional[str] = None
     industry: Optional[str] = None
     budget: Optional[float] = None
-    duration_days: Optional[int] = 14
+    duration_days: Optional[int] = 7
     objective: Optional[str] = "performance"
     poi: Optional[str] = None
     top_k: Optional[int] = 20

@@ -252,7 +252,7 @@ def _why_panel_selected(
         )
     if p.get("daily_traffic"):
         reasons.append(
-            f"Audience : environ {int(p['daily_traffic']):,} passages/semaine".replace(",", " ")
+            f"Audience : environ {int(p['daily_traffic']):,} passages/jour".replace(",", " ")
             + (f", ≈ {int(p['impressions']):,} impressions sur la campagne".replace(",", " ") if p.get("impressions") else "")
             + "."
         )
@@ -306,7 +306,7 @@ def _panel_facts(
     if p.get("arrondissement"):
         facts["arrondissement"] = f"{p['arrondissement']}e"
     if p.get("daily_traffic"):
-        facts["audience_passages_semaine"] = int(p["daily_traffic"])
+        facts["audience_passages_jour"] = int(p["daily_traffic"])
     if p.get("impressions"):
         facts["impressions_campagne"] = int(p["impressions"])
     if p.get("distance_m") is not None and brief.get("enseigne"):
@@ -685,20 +685,20 @@ def _fallback_explanation(
         prox_templates = [
             (
                 f"Ce panneau est implanté {where}, à {d} m du {store} : il capte environ {traffic} passages "
-                f"par semaine, soit ≈ {impr} impressions sur la campagne. Une face idéale pour toucher la clientèle "
+                f"par jour, soit ≈ {impr} impressions sur la campagne. Une face idéale pour toucher la clientèle "
                 f"{ens} juste avant l'entrée en magasin."
             ),
             (
-                f"À {d} m seulement du {store}, cette face ({where}) touche ≈ {traffic} personnes chaque semaine. "
+                f"À {d} m seulement du {store}, cette face ({where}) touche ≈ {traffic} personnes chaque jour. "
                 f"Sur la durée, cela représente près de {impr} impressions au plus près du point de vente {ens}."
             ),
             (
                 f"Cette face, {where}, est retenue pour sa proximité immédiate avec le {store} ({d} m) et son "
-                f"audience de {traffic} passages/semaine — ≈ {impr} impressions qui accompagnent le client jusqu'au magasin."
+                f"audience de {traffic} passages/jour — ≈ {impr} impressions qui accompagnent le client jusqu'au magasin."
             ),
             (
                 f"Placé à {d} m du {store} ({where}), ce panneau offre une {vis} et une {aud} : "
-                f"{traffic} passages hebdomadaires, soit ≈ {impr} impressions dans la zone de chalandise {ens}."
+                f"{traffic} passages quotidiens, soit ≈ {impr} impressions dans la zone de chalandise {ens}."
             ),
         ]
         for offset in range(len(prox_templates)):

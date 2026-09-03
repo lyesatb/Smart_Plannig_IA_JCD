@@ -18,7 +18,7 @@ class Brief(BaseModel):
     budget: float | None = None
     objective: str | None = None
     poi: str | None = None
-    duration_days: int = 14
+    duration_days: int = 7
     industry: str | None = None
     top_k: int | None = None
     per_city: int | None = None
