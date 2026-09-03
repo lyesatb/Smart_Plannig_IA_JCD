@@ -15,6 +15,7 @@ from app.tools.brief_utils import brief_to_scoring_criteria
 PLAN_KEYS = (
     "city", "cities", "target", "industry", "poi", "objective", "budget",
     "top_k", "per_city", "city_quotas", "enseigne", "arrondissement", "max_distance_m",
+    "duration_days",
 )
 
 
@@ -151,6 +152,9 @@ def _criteria_summary(c: dict[str, Any]) -> str:
         bits.append(f"proximité des magasins {c['enseigne']}")
     if c.get("max_distance_m"):
         bits.append(f"rayon {c['max_distance_m']} m")
+    if c.get("duration_days"):
+        d = int(c["duration_days"])
+        bits.append(f"{d // 7} semaines" if d % 7 == 0 else f"{d} jours")
     if c.get("target"):
         bits.append("cible " + str(c["target"]))
     if c.get("industry"):
@@ -190,6 +194,7 @@ def _criteria_diff(
         ("enseigne", "enseigne"),
         ("arrondissement", "arrondissement"),
         ("max_distance_m", "rayon (m)"),
+        ("duration_days", "durée (jours)"),
     ]
     changes: list[str] = []
     for key, label in labels:
@@ -224,9 +229,11 @@ def build_assistant_reply(
     def _fmt(v: Any) -> str:
         return f"{int(v):,}".replace(",", " ") if isinstance(v, (int, float)) else "—"
 
-    reach = recommendation.get("estimated_daily_reach")
+    reach = recommendation.get("estimated_weekly_reach")
     impressions = recommendation.get("estimated_impressions")
-    duration = recommendation.get("duration_days") or criteria.get("duration_days") or 14
+    budget = recommendation.get("estimated_budget")
+    weeks = recommendation.get("duration_weeks")
+    dur_txt = f"{weeks} semaine{'s' if isinstance(weeks, (int, float)) and weeks >= 2 else ''}" if weeks else "la période"
     dist = recommendation.get("distance_stats") or {}
     enseigne = criteria.get("enseigne")
 
@@ -237,12 +244,14 @@ def build_assistant_reply(
     if diff:
         parts.append("Changements pris en compte : " + " ; ".join(diff) + ".")
 
-    audience = f"{n} faces, ≈ {_fmt(reach)} passages/jour, soit ≈ {_fmt(impressions)} impressions sur {duration} jours"
+    audience = f"{n} faces, ≈ {_fmt(reach)} passages/semaine, soit ≈ {_fmt(impressions)} impressions sur {dur_txt}"
     if enseigne and dist:
         audience += (
             f" ; toutes les faces sont à moins de {dist.get('max_m')} m d'un magasin {enseigne} "
             f"(distance moyenne {dist.get('avg_m')} m)"
         )
+    if isinstance(budget, (int, float)) and budget > 0:
+        audience += f". Budget estimé : {_fmt(budget)} €"
     parts.append(audience + ".")
     if extra_note:
         parts.append(extra_note)
@@ -290,9 +299,8 @@ def _plan_stats(recommendation: dict[str, Any] | None) -> dict[str, Any] | None:
     for r in results[:4]:
         item: dict[str, Any] = {
             "ville": r.get("city"),
-            "quartier": r.get("district"),
-            "format": r.get("format"),
-            "passages_jour": r.get("daily_traffic"),
+            "adresse": r.get("address"),
+            "passages_semaine": r.get("daily_traffic"),
             "impressions": r.get("impressions"),
         }
         if r.get("arrondissement"):
@@ -305,9 +313,10 @@ def _plan_stats(recommendation: dict[str, Any] | None) -> dict[str, Any] | None:
         "faces": len(results),
         "agglomerations": cities,
         "faces_par_ville": par_ville,
-        "audience_passages_jour": recommendation.get("estimated_daily_reach"),
+        "audience_passages_semaine": recommendation.get("estimated_weekly_reach"),
         "impressions_estimees": recommendation.get("estimated_impressions"),
-        "duree_jours": recommendation.get("duration_days"),
+        "duree_semaines": recommendation.get("duration_weeks"),
+        "budget_estime_eur": recommendation.get("estimated_budget"),
         "poi_dominant": top_poi,
         "exemples_faces": sample,
     }
@@ -330,8 +339,9 @@ _REPLY_SYSTEM = (
     "même type de plan…). Change l'angle, l'ordre des informations, la longueur. "
     "RÈGLE ABSOLUE : n'invente jamais de chiffres — utilise uniquement ceux du CONTEXTE. "
     "Tu t'adresses à un CLIENT annonceur (vouvoiement). Ce qui l'intéresse : l'AUDIENCE "
-    "(passages/jour, impressions sur la durée), la DISTANCE des faces aux magasins de son enseigne, "
-    "l'arrondissement / la zone, et le nombre de faces. "
+    "(passages/SEMAINE — la base est hebdomadaire —, impressions sur la durée en semaines), le BUDGET "
+    "estimé, la DISTANCE des faces aux magasins de son enseigne, l'arrondissement / la zone, et le nombre "
+    "de faces. Ne cite jamais le format/type de support (2m2, écran…) : dis « ce panneau »/« cette face ». "
     "INTERDIT : parler de « score », « smart score », « scoring » ou de note interne — ça ne veut "
     "rien dire pour le client. Traduis toujours en bénéfice concret (audience, proximité, visibilité). "
     "Si 'plan_mis_a_jour' est vrai : dis ce qui a changé (voir 'changements' si présent) et donne "

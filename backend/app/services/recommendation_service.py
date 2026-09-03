@@ -493,9 +493,12 @@ def recommend_panels(criteria):
 
     analytics = build_recommendation_analytics(eligible, pool, df, criteria, ineligible)
 
+    # Base JCDecaux HEBDOMADAIRE : daily_traffic = audience PAR SEMAINE.
     duration_days = int(criteria.get("duration_days") or 14)
+    weeks = duration_days / 7.0
+    duration_weeks = int(round(weeks)) if abs(weeks - round(weeks)) < 0.05 else round(weeks, 1)
     df = df.copy()
-    df["impressions"] = (df["daily_traffic"].astype(float) * duration_days).round().astype(int)
+    df["impressions"] = (df["daily_traffic"].astype(float) * weeks).round().astype(int)
 
     # Explication par défaut (distance + audience, jamais de score). Le LLM peut la réécrire ensuite.
     from app.tools.panel_copy_tool import _fallback_explanation
@@ -539,8 +542,10 @@ def recommend_panels(criteria):
                 r[k] = None
 
     avg_score = round(sum([r["smart_score"] for r in results]) / len(results), 2) if results else 0
-    reach = int(sum([r["daily_traffic"] for r in results]))
+    reach = int(sum([r["daily_traffic"] for r in results]))  # passages/semaine (base hebdo)
     impressions = int(sum([r["impressions"] for r in results]))
+    # Budget = somme, par panneau, du prix/jour × nombre de jours de campagne.
+    budget = int(round(sum(float(r.get("price_per_day") or 0) * duration_days for r in results)))
     agglomerations = sorted({r["city"] for r in results if r.get("city")})
 
     stores = eligible.attrs.get("stores") if hasattr(eligible, "attrs") else None
@@ -564,17 +569,21 @@ def recommend_panels(criteria):
     def _fmt(n: int) -> str:
         return f"{int(n):,}".replace(",", " ")
 
+    def _weeks_txt(w) -> str:
+        return f"{w} semaine{'s' if (isinstance(w, (int, float)) and w >= 2) else ''}"
+
+    dur_txt = _weeks_txt(duration_weeks)
     if enseigne and distance_stats:
         summary = (
             f"{len(results)} faces retenues à {where}, toutes à moins de {distance_stats['max_m']} m "
             f"d'un magasin {enseigne} (distance moyenne {distance_stats['avg_m']} m). "
-            f"Audience estimée : {_fmt(reach)} passages/jour, soit ≈ {_fmt(impressions)} impressions "
-            f"sur {duration_days} jours."
+            f"Audience estimée : {_fmt(reach)} passages/semaine, soit ≈ {_fmt(impressions)} impressions "
+            f"sur {dur_txt}. Budget estimé : {_fmt(budget)} €."
         )
     else:
         summary = (
-            f"{len(results)} faces retenues à {where}. Audience estimée : {_fmt(reach)} passages/jour, "
-            f"soit ≈ {_fmt(impressions)} impressions sur {duration_days} jours."
+            f"{len(results)} faces retenues à {where}. Audience estimée : {_fmt(reach)} passages/semaine, "
+            f"soit ≈ {_fmt(impressions)} impressions sur {dur_txt}. Budget estimé : {_fmt(budget)} €."
         )
 
     return {
@@ -583,9 +592,11 @@ def recommend_panels(criteria):
         "eligible_count": int(len(eligible)),
         "pool_internal_count": int(len(pool)),
         "export_row_count": int(len(eligible)),
-        "estimated_daily_reach": reach,
+        "estimated_weekly_reach": reach,
         "estimated_impressions": impressions,
+        "estimated_budget": budget,
         "duration_days": duration_days,
+        "duration_weeks": duration_weeks,
         "faces": int(len(results)),
         "agglomerations": agglomerations,
         "agglomeration_count": len(agglomerations),

@@ -139,6 +139,15 @@ def brief_to_scoring_criteria(brief: dict[str, Any], message: str = "") -> dict[
     if dist_msg:
         c["max_distance_m"] = dist_msg
 
+    # Durée de campagne (base hebdomadaire) : « 3 semaines » / « 21 jours »
+    low = (message or "").lower()
+    mw = re.search(r"(\d{1,2})\s*semaines?", low)
+    md = re.search(r"(\d{1,3})\s*jours?", low)
+    if mw:
+        c["duration_days"] = max(7, int(mw.group(1)) * 7)
+    elif md:
+        c["duration_days"] = max(1, int(md.group(1)))
+
     # Nombre de panneaux par ville (« 5 pour chaque », « 8 pour Lyon et 2 pour Paris »)
     # Le dernier message prime toujours sur les valeurs héritées du tour précédent.
     per_city, quotas = parse_panel_counts(message)
