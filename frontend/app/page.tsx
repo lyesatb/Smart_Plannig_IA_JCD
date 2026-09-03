@@ -387,8 +387,12 @@ export default function Home() {
                       <li key={p.panel_id} className="rounded-md bg-white/10 p-3 text-sm">
                         <div className="flex items-start justify-between gap-2">
                           <div className="font-semibold">
-                            {i + 1}. {p.format} — {p.city}
-                            {p.arrondissement ? ` ${p.arrondissement}e` : ""} · {p.district}
+                            {i + 1}. {p.address || "Panneau"}
+                            <span className="font-normal text-white/70">
+                              {" "}
+                              — {p.city}
+                              {p.arrondissement ? ` ${p.arrondissement}e` : ""}
+                            </span>
                           </div>
                           {p.distance_m != null && (
                             <div className="shrink-0 text-xs bg-white text-[#1f5f7f] font-bold rounded px-2 py-0.5">
@@ -396,7 +400,6 @@ export default function Home() {
                             </div>
                           )}
                         </div>
-                        {p.address && <div className="text-xs text-white/70 mt-0.5">{p.address}</div>}
                         <div className="text-xs text-white/80 mt-1">
                           {p.nearest_store ? `${p.nearest_store} · ` : ""}
                           {fmtInt(p.daily_traffic)} passages/jour

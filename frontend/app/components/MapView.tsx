@@ -115,11 +115,11 @@ function PanelPopup({ p }: { p: Panel }) {
   return (
     <Popup>
       <div className="text-sm">
-        <div className="font-semibold">
-          {p.format} — {p.city}
+        <div className="font-semibold">{p.address || 'Panneau'}</div>
+        <div className="opacity-80">
+          {p.city}
           {p.arrondissement ? ` ${p.arrondissement}e` : ''}
         </div>
-        <div className="opacity-80">{p.address || p.district}</div>
         {p.distance_m != null && (
           <div className="mt-1">
             <b>{fmtInt(p.distance_m)} m</b> du {p.nearest_store || 'magasin'}
