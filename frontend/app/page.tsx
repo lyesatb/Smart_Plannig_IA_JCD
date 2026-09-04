@@ -582,7 +582,14 @@ function outlineBtn(disabled: boolean): React.CSSProperties {
 
 function KpiCard({ value, label }: { value: string; label: string }) {
   return (
-    <div style={{ ...card(), padding: "16px 20px" }}>
+    <div
+      style={{
+        ...card(),
+        padding: "16px 20px",
+        borderLeft: "4px solid var(--navy)",
+        position: "relative",
+      }}
+    >
       <div style={{ fontSize: "26px", fontWeight: 700, color: "var(--text-primary)", lineHeight: 1.1 }}>{value}</div>
       <div style={{ fontSize: "12px", color: "var(--text-secondary)", marginTop: 3, textTransform: "lowercase" }}>{label}</div>
     </div>
@@ -591,7 +598,19 @@ function KpiCard({ value, label }: { value: string; label: string }) {
 
 function Tag({ children }: { children: React.ReactNode }) {
   return (
-    <span style={{ display: "inline-flex", alignItems: "center", padding: "3px 10px", background: "rgba(22,40,62,0.07)", border: "1px solid rgba(22,40,62,0.12)", borderRadius: 20, color: "var(--navy)", fontSize: "11.5px", fontWeight: 600 }}>
+    <span
+      style={{
+        display: "inline-flex",
+        alignItems: "center",
+        padding: "4px 12px",
+        background: "rgba(22,40,62,0.10)",
+        border: "none",
+        borderRadius: 999,
+        color: "var(--navy)",
+        fontSize: "11.5px",
+        fontWeight: 600,
+      }}
+    >
       {children}
     </span>
   );
