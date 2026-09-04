@@ -30,8 +30,8 @@ export type Store = {
   arrondissement?: number | null;
 };
 
-// Couleurs Figma : faces violettes, magasins rouge JCDecaux.
-const FACE = '#7c3aed';
+// Faces = couleur JCDecaux (navy) ; magasins = rouge JCDecaux.
+const FACE = '#16283e';
 const STORE = '#e2001a';
 
 const MAPBOX_TOKEN = process.env.NEXT_PUBLIC_MAPBOX_TOKEN;
@@ -56,7 +56,7 @@ const STYLE_OPTIONS: { value: string; label: string }[] = [
       ]
     : [{ value: 'osm', label: 'OSM' }]),
 ];
-const DEFAULT_STYLE = MAPBOX_TOKEN ? CUSTOM_STYLE : 'carto';
+const DEFAULT_STYLE = 'carto';
 
 const MARKER_OPTIONS = [
   { value: 'dot', label: 'Points' },
@@ -185,10 +185,12 @@ export function MapView({
   panels,
   stores = [],
   height = 460,
+  showToolbar = true,
 }: {
   panels: Panel[];
   stores?: Store[];
   height?: number;
+  showToolbar?: boolean;
 }) {
   const [style, setStyle] = useState<string>(DEFAULT_STYLE);
   const [marker, setMarker] = useState<string>(DEFAULT_MARKER);
@@ -201,31 +203,33 @@ export function MapView({
   return (
     <div>
       {/* Toolbar */}
-      <div
-        className="flex items-center justify-end gap-2"
-        style={{
-          padding: '10px 14px',
-          borderBottom: '1px solid var(--border)',
-          background: 'var(--surface-alt)',
-        }}
-      >
-        <label style={{ fontSize: '11.5px', color: 'var(--text-secondary)', fontWeight: 500 }}>Fond</label>
-        <select value={style} onChange={(e) => setStyle(e.target.value)} className="fig-select fig-select-sm" style={{ width: 'auto' }}>
-          {STYLE_OPTIONS.map((o) => (
-            <option key={o.value} value={o.value}>
-              {o.label}
-            </option>
-          ))}
-        </select>
-        <label style={{ fontSize: '11.5px', color: 'var(--text-secondary)', fontWeight: 500 }}>Faces</label>
-        <select value={marker} onChange={(e) => setMarker(e.target.value)} className="fig-select fig-select-sm" style={{ width: 'auto' }}>
-          {MARKER_OPTIONS.map((o) => (
-            <option key={o.value} value={o.value}>
-              {o.label}
-            </option>
-          ))}
-        </select>
-      </div>
+      {showToolbar && (
+        <div
+          className="flex items-center justify-end gap-2"
+          style={{
+            padding: '10px 14px',
+            borderBottom: '1px solid var(--border)',
+            background: 'var(--surface-alt)',
+          }}
+        >
+          <label style={{ fontSize: '11.5px', color: 'var(--text-secondary)', fontWeight: 500 }}>Fond</label>
+          <select value={style} onChange={(e) => setStyle(e.target.value)} className="fig-select fig-select-sm" style={{ width: 'auto' }}>
+            {STYLE_OPTIONS.map((o) => (
+              <option key={o.value} value={o.value}>
+                {o.label}
+              </option>
+            ))}
+          </select>
+          <label style={{ fontSize: '11.5px', color: 'var(--text-secondary)', fontWeight: 500 }}>Faces</label>
+          <select value={marker} onChange={(e) => setMarker(e.target.value)} className="fig-select fig-select-sm" style={{ width: 'auto' }}>
+            {MARKER_OPTIONS.map((o) => (
+              <option key={o.value} value={o.value}>
+                {o.label}
+              </option>
+            ))}
+          </select>
+        </div>
+      )}
 
       {/* Map */}
       <div style={{ height, position: 'relative' }}>
