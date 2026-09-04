@@ -1,7 +1,10 @@
 'use client';
 
 import { useEffect, useRef, useState } from "react";
-import { Send, RotateCcw, Download, CalendarCheck } from "lucide-react";
+import {
+  Send, RotateCcw, Download, CalendarCheck, Sparkles, Bot, Target, MapPin,
+  Clock, Monitor, Eye, Wallet, Filter, Store as StoreIcon, Users,
+} from "lucide-react";
 import dynamic from "next/dynamic";
 
 import type { Store } from "./components/MapView";
@@ -9,7 +12,7 @@ import { getApiBase } from "../lib/get-api-base";
 
 const MapView = dynamic(
   () => import("./components/MapView").then((m) => m.MapView),
-  { ssr: false, loading: () => <div className="h-[560px] rounded-md bg-[#dfe6ea] animate-pulse" /> },
+  { ssr: false, loading: () => <div className="h-[560px] rounded-xl bg-slate-100 animate-pulse" /> },
 );
 
 type Panel = {
@@ -288,26 +291,32 @@ export default function Home() {
   const durDaysValue = criteria.duration_days ? String(criteria.duration_days) : "";
 
   return (
-    <main className="min-h-screen p-5 md:p-8">
-      <div className="max-w-[1440px] mx-auto">
+    <main className="min-h-screen p-4 md:p-7">
+      <div className="max-w-[1480px] mx-auto">
         {/* Bandeau */}
-        <header className="flex items-center justify-between mb-8">
-          <div className="text-3xl md:text-4xl font-extrabold tracking-tight text-[#111]">
-            JCDecaux <span className="font-light align-top text-4xl md:text-5xl leading-none">+</span>
+        <header className="flex items-center justify-between mb-7 pb-4 border-b border-slate-200/70">
+          <div className="flex items-baseline gap-1">
+            <span className="text-2xl md:text-3xl font-extrabold tracking-tight text-slate-900">JCDecaux</span>
+            <span className="text-3xl md:text-4xl font-light leading-none text-[#1f5f7f]">+</span>
           </div>
-          <nav className="flex items-center gap-6 md:gap-10 text-sm">
-            <span className="font-bold text-[#111]">Construire mon dispositif</span>
-            <span className="text-[#333] hidden sm:inline">Concevoir mon visuel</span>
-            <button className="jcd-block px-5 py-3 text-sm font-semibold">Mon espace client</button>
+          <nav className="flex items-center gap-2 md:gap-3 text-sm">
+            <span className="px-3 py-2 rounded-lg font-semibold text-[#1f5f7f] bg-[#1f5f7f]/10">Construire mon dispositif</span>
+            <span className="px-3 py-2 rounded-lg text-slate-500 hover:text-slate-800 hidden sm:inline cursor-default transition">Concevoir mon visuel</span>
+            <button className="px-4 py-2.5 rounded-xl text-sm font-semibold text-white bg-[#1f5f7f] hover:bg-[#163f56] shadow-sm transition">Mon espace client</button>
           </nav>
         </header>
 
-        <div className="flex items-center justify-between mb-4">
-          <h1 className="text-xl md:text-2xl font-medium text-[#111]">Construire mon dispositif</h1>
+        <div className="flex items-end justify-between mb-5">
+          <div>
+            <h1 className="text-2xl md:text-3xl font-bold text-slate-900 tracking-tight">Construire mon dispositif</h1>
+            <p className="text-sm text-slate-500 mt-1">
+              Décrivez votre besoin — l'IA compose et cartographie votre plan média.
+            </p>
+          </div>
           {messages.length > 0 && (
             <button
               onClick={resetAll}
-              className="text-xs text-[#1f5f7f] hover:underline flex items-center gap-1"
+              className="text-xs text-slate-500 hover:text-[#1f5f7f] inline-flex items-center gap-1.5 px-3 py-2 rounded-lg hover:bg-slate-100 transition"
             >
               <RotateCcw size={14} /> Nouveau brief
             </button>
@@ -317,34 +326,43 @@ export default function Home() {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
           {/* Colonne gauche : besoin (chat) + explication */}
           <div className="lg:col-span-4 flex flex-col gap-5">
-            <section className="jcd-block p-5 flex flex-col min-h-[440px]">
-              <h2 className="text-lg font-medium text-center mb-4">
-                Quel est votre besoin de communication ?
-              </h2>
+            <section className="card p-5 flex flex-col min-h-[460px]">
+              <div className="flex items-center gap-2.5 mb-4">
+                <div className="h-9 w-9 rounded-xl grid place-items-center bg-[#1f5f7f]/10 text-[#1f5f7f]">
+                  <Sparkles size={18} />
+                </div>
+                <div>
+                  <h2 className="text-sm font-semibold text-slate-900 leading-tight">Votre besoin de communication</h2>
+                  <p className="text-[11px] text-slate-400">Assistant IA · langage naturel</p>
+                </div>
+              </div>
 
-              <div ref={threadRef} className="flex-1 overflow-auto space-y-3 mb-3 max-h-[320px] pr-1">
+              <div ref={threadRef} className="flex-1 overflow-auto thin-scroll space-y-3 mb-3 max-h-[300px] pr-1">
                 {messages.length === 0 && (
-                  <p className="text-sm text-white/80 text-center mt-6 px-2">
+                  <div className="text-sm text-slate-500 rounded-xl bg-slate-50 border border-slate-100 p-4">
                     Décrivez votre campagne : enseigne, zone (ville, arrondissement), cible…
                     Le dispositif s'affiche sur la carte, puis vous l'affinez en discutant.
-                  </p>
+                  </div>
                 )}
                 {messages.map((m) => (
                   <Bubble key={m.id} role={m.role} content={m.content} />
                 ))}
                 {loading && (
-                  <div className="text-sm text-white/80 flex items-center gap-2">
+                  <div className="flex items-center gap-2 text-sm text-slate-500">
+                    <div className="h-7 w-7 rounded-full grid place-items-center bg-slate-100 text-[#1f5f7f]">
+                      <Bot size={15} />
+                    </div>
                     <span className="inline-flex gap-1">
                       <Dot /> <Dot /> <Dot />
                     </span>
-                    Analyse du brief et sélection des faces…
+                    <span>Analyse du brief…</span>
                   </div>
                 )}
               </div>
 
-              <div className="relative rounded-md bg-white text-[#111]">
+              <div className="relative rounded-2xl border border-slate-200 bg-white focus-within:border-[#1f5f7f] focus-within:ring-4 focus-within:ring-[#1f5f7f]/10 transition">
                 <textarea
-                  className="w-full min-h-[76px] max-h-40 bg-transparent px-3 py-2.5 pr-12 text-sm outline-none resize-none rounded-md"
+                  className="w-full min-h-[74px] max-h-40 bg-transparent px-3.5 py-3 pr-12 text-sm outline-none resize-none rounded-2xl text-slate-800 placeholder:text-slate-400"
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
                   onKeyDown={onKeyDown}
@@ -354,28 +372,33 @@ export default function Home() {
                   onClick={() => send()}
                   disabled={loading || !input.trim()}
                   aria-label="Envoyer"
-                  className="absolute right-2 bottom-2 h-8 w-8 rounded-full bg-[#1f5f7f] text-white flex items-center justify-center hover:bg-[#163f56] disabled:opacity-40"
+                  className="absolute right-2.5 bottom-2.5 h-9 w-9 rounded-xl bg-[#1f5f7f] text-white grid place-items-center hover:bg-[#163f56] shadow-sm disabled:opacity-40 disabled:cursor-not-allowed transition"
                 >
-                  <Send size={15} />
+                  <Send size={16} />
                 </button>
               </div>
-              <p className="text-[11px] text-white/60 mt-1.5">Entrée pour envoyer · Maj+Entrée = nouvelle ligne</p>
+              <p className="text-[11px] text-slate-400 mt-1.5">Entrée pour envoyer · Maj+Entrée = nouvelle ligne</p>
               {chatError && (
-                <p className="mt-2 text-xs bg-white/15 border border-white/30 rounded-md p-2">{chatError}</p>
+                <p className="mt-2 text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-lg p-2.5">{chatError}</p>
               )}
             </section>
 
-            <section className="jcd-block p-5 min-h-[260px] flex flex-col">
-              <h2 className="text-lg font-medium text-center mb-3">Explication choix des faces vs. brief</h2>
+            <section className="card p-5 flex flex-col">
+              <div className="flex items-center gap-2.5 mb-3">
+                <div className="h-9 w-9 rounded-xl grid place-items-center bg-[#1f5f7f]/10 text-[#1f5f7f]">
+                  <Target size={18} />
+                </div>
+                <h2 className="text-sm font-semibold text-slate-900">Pourquoi ces faces ? (vs. brief)</h2>
+              </div>
               {!rec ? (
-                <p className="text-sm text-white/75 text-center mt-4">
+                <div className="text-sm text-slate-500 rounded-xl bg-slate-50 border border-slate-100 p-4">
                   Une fois le brief envoyé, vous verrez ici pourquoi chaque face est retenue :
                   distance aux magasins, audience, zone.
-                </p>
+                </div>
               ) : (
                 <div className="flex-1 flex flex-col min-h-0">
-                  <p className="text-sm leading-relaxed">{rec.summary}</p>
-                  <div className="mt-3 text-xs text-white/85 flex flex-wrap gap-2">
+                  <p className="text-sm leading-relaxed text-slate-600">{rec.summary}</p>
+                  <div className="mt-3 flex flex-wrap gap-1.5">
                     {criteria.enseigne && <Tag>Enseigne : {criteria.enseigne}</Tag>}
                     {criteria.arrondissement && <Tag>Paris {criteria.arrondissement}e</Tag>}
                     {!criteria.arrondissement && (criteria.city || criteria.cities) && (
@@ -385,31 +408,40 @@ export default function Home() {
                     {criteria.target && <Tag>Cible : {criteria.target}</Tag>}
                     {rec.eligible_count != null && <Tag>{fmtInt(rec.eligible_count)} faces éligibles</Tag>}
                   </div>
-                  <ul className="mt-4 space-y-2 overflow-auto max-h-[380px] pr-1">
+                  <ul className="mt-4 space-y-2 overflow-auto thin-scroll max-h-[400px] pr-1">
                     {panels.map((p, i) => (
-                      <li key={p.panel_id} className="rounded-md bg-white/10 p-3 text-sm">
+                      <li
+                        key={p.panel_id}
+                        className="rounded-xl border border-slate-100 bg-slate-50/70 hover:bg-white hover:border-slate-200 hover:shadow-sm p-3 transition"
+                      >
                         <div className="flex items-start justify-between gap-2">
-                          <div className="font-semibold">
-                            {i + 1}. {p.address || "Panneau"}
-                            <span className="font-normal text-white/70">
-                              {" "}
-                              — {p.city}
-                              {p.arrondissement ? ` ${p.arrondissement}e` : ""}
+                          <div className="flex items-start gap-2 min-w-0">
+                            <span className="mt-0.5 h-5 w-5 shrink-0 rounded-full bg-[#1f5f7f] text-white text-[11px] font-bold grid place-items-center">
+                              {i + 1}
                             </span>
+                            <div className="min-w-0">
+                              <div className="font-semibold text-slate-800 text-[13px] leading-snug truncate">
+                                {p.address || "Panneau"}
+                              </div>
+                              <div className="text-[11px] text-slate-400">
+                                {p.city}
+                                {p.arrondissement ? ` ${p.arrondissement}e` : ""}
+                                {p.nearest_store ? ` · ${p.nearest_store}` : ""}
+                              </div>
+                            </div>
                           </div>
                           {p.distance_m != null && (
-                            <div className="shrink-0 text-xs bg-white text-[#1f5f7f] font-bold rounded px-2 py-0.5">
+                            <div className="shrink-0 text-[11px] bg-[#1f5f7f]/10 text-[#1f5f7f] font-bold rounded-full px-2 py-0.5">
                               {fmtInt(p.distance_m)} m
                             </div>
                           )}
                         </div>
-                        <div className="text-xs text-white/80 mt-1">
-                          {p.nearest_store ? `${p.nearest_store} · ` : ""}
+                        <div className="text-[11px] text-slate-500 mt-1.5 pl-7">
                           {fmtInt(p.daily_traffic)} passages/jour
                           {typeof p.impressions === "number" ? ` · ≈ ${fmtCompact(p.impressions)} impressions` : ""}
                         </div>
                         {p.explanation?.trim() && (
-                          <p className="text-xs leading-relaxed mt-1.5 text-white/90">{p.explanation}</p>
+                          <p className="text-xs leading-relaxed mt-1.5 pl-7 text-slate-600">{p.explanation}</p>
                         )}
                       </li>
                     ))}
@@ -422,20 +454,32 @@ export default function Home() {
           {/* Colonne centrale : KPIs + carto */}
           <div className="lg:col-span-6 flex flex-col gap-5">
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <Chip value={rec ? durationLabel : "—"} label="durée de campagne" />
-              <Chip value={rec ? fmtInt(facesCount) : "—"} label="faces" />
-              <Chip value={rec ? fmtCompact(impressions) : "—"} label="impressions" />
+              <Chip icon={<Clock size={18} />} value={rec ? durationLabel : "—"} label="durée de campagne" accent="#6366f1" />
+              <Chip icon={<Monitor size={18} />} value={rec ? fmtInt(facesCount) : "—"} label="faces" accent="#1f5f7f" />
+              <Chip icon={<Eye size={18} />} value={rec ? fmtCompact(impressions) : "—"} label="impressions" accent="#0891b2" />
               <Chip
+                icon={<Wallet size={18} />}
                 value={rec && typeof budget === "number" ? `${fmtInt(budget)} €` : "—"}
                 label="budget"
+                accent="#059669"
               />
             </div>
-            <section className="jcd-block p-2 relative">
-              {(loading || filtering) && (
-                <div className="absolute inset-0 z-[1100] bg-[#1f5f7f]/40 flex items-center justify-center rounded-md">
-                  <span className="bg-white text-[#1f5f7f] text-sm font-semibold px-4 py-2 rounded shadow">
-                    Mise à jour de la carte…
+            <section className="card p-3 relative">
+              <div className="flex items-center gap-2 px-1 pb-2">
+                <MapPin size={16} className="text-[#1f5f7f]" />
+                <h2 className="text-sm font-semibold text-slate-900">Carte des faces</h2>
+                {rec?.distance_stats && (
+                  <span className="text-[11px] text-slate-400 ml-auto">
+                    distance moyenne {rec.distance_stats.avg_m} m
                   </span>
+                )}
+              </div>
+              {(loading || filtering) && (
+                <div className="absolute inset-0 z-[1100] bg-white/60 backdrop-blur-[2px] grid place-items-center rounded-2xl">
+                  <div className="inline-flex items-center gap-2 text-sm font-medium text-[#1f5f7f] bg-white px-4 py-2 rounded-full shadow-md">
+                    <span className="h-4 w-4 rounded-full border-2 border-[#1f5f7f] border-t-transparent animate-spin" />
+                    Mise à jour…
+                  </div>
                 </div>
               )}
               <MapView panels={panels} stores={stores} height={560} />
@@ -447,108 +491,114 @@ export default function Home() {
             <button
               onClick={saveExcel}
               disabled={!plan || exporting}
-              className="jcd-red rounded-md py-2.5 text-sm font-bold tracking-wide flex items-center justify-center gap-2 disabled:opacity-40"
+              className="w-full rounded-xl py-3 text-sm font-semibold text-white bg-[#1f5f7f] hover:bg-[#163f56] shadow-sm inline-flex items-center justify-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed transition"
             >
-              <Download size={16} /> {exporting ? "EXPORT…" : "ENREGISTRER"}
+              <Download size={16} /> {exporting ? "Export…" : "Enregistrer"}
             </button>
             <button
               onClick={preReserve}
               disabled={!plan}
-              className="jcd-red rounded-md py-2.5 text-sm font-bold tracking-wide flex items-center justify-center gap-2 disabled:opacity-40"
+              className="w-full rounded-xl py-3 text-sm font-semibold text-[#1f5f7f] bg-white border border-[#1f5f7f]/30 hover:bg-[#1f5f7f]/5 inline-flex items-center justify-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed transition"
             >
-              <CalendarCheck size={16} /> PRE-RESERVER
+              <CalendarCheck size={16} /> Pré-réserver
             </button>
             {note && (
-              <p className="text-xs text-[#1f5f7f] bg-white rounded-md border border-[#1f5f7f]/30 p-2">{note}</p>
+              <p className="text-xs text-[#1f5f7f] bg-[#1f5f7f]/5 rounded-xl border border-[#1f5f7f]/15 p-2.5">{note}</p>
             )}
 
-            <h3 className="text-lg font-medium mt-3 text-[#111]">Filtres</h3>
+            <div className="card p-4 mt-1">
+              <div className="flex items-center gap-2 mb-3.5">
+                <Filter size={16} className="text-[#1f5f7f]" />
+                <h3 className="text-sm font-semibold text-slate-900">Filtres</h3>
+              </div>
+              <div className="space-y-3.5">
+                <FilterBox icon={<MapPin size={13} />} label="Zone géographique">
+                  <select
+                    value={arrValue}
+                    onChange={(e) => applyFilter({ arrondissement: e.target.value ? Number(e.target.value) : null, city: "Paris" })}
+                    className="select-modern"
+                  >
+                    <option value="">Tout Paris</option>
+                    {Array.from({ length: 20 }, (_, i) => i + 1).map((n) => (
+                      <option key={n} value={n}>
+                        Paris {n}e
+                      </option>
+                    ))}
+                  </select>
+                </FilterBox>
 
-            <FilterBox label="Géographique">
-              <select
-                value={arrValue}
-                onChange={(e) => applyFilter({ arrondissement: e.target.value ? Number(e.target.value) : null, city: "Paris" })}
-                className="jcd-select"
-              >
-                <option value="">Tout Paris</option>
-                {Array.from({ length: 20 }, (_, i) => i + 1).map((n) => (
-                  <option key={n} value={n}>
-                    Paris {n}e
-                  </option>
-                ))}
-              </select>
-            </FilterBox>
+                <FilterBox icon={<StoreIcon size={13} />} label="Distance enseigne">
+                  <select
+                    value={enseigneValue}
+                    onChange={(e) => applyFilter({ enseigne: e.target.value || null })}
+                    className="select-modern mb-2"
+                  >
+                    <option value="">Aucune enseigne</option>
+                    {filterOptions.enseignes.map((en) => (
+                      <option key={en} value={en}>
+                        {en}
+                      </option>
+                    ))}
+                  </select>
+                  <select
+                    value={distValue}
+                    onChange={(e) => applyFilter({ max_distance_m: e.target.value ? Number(e.target.value) : null })}
+                    className="select-modern"
+                    disabled={!enseigneValue}
+                  >
+                    <option value="">Rayon auto</option>
+                    {filterOptions.distances_m.map((d) => (
+                      <option key={d} value={d}>
+                        ≤ {d} m
+                      </option>
+                    ))}
+                  </select>
+                </FilterBox>
 
-            <FilterBox label="Distance Enseigne">
-              <select
-                value={enseigneValue}
-                onChange={(e) => applyFilter({ enseigne: e.target.value || null })}
-                className="jcd-select mb-1.5"
-              >
-                <option value="">Aucune enseigne</option>
-                {filterOptions.enseignes.map((en) => (
-                  <option key={en} value={en}>
-                    {en}
-                  </option>
-                ))}
-              </select>
-              <select
-                value={distValue}
-                onChange={(e) => applyFilter({ max_distance_m: e.target.value ? Number(e.target.value) : null })}
-                className="jcd-select"
-                disabled={!enseigneValue}
-              >
-                <option value="">Rayon auto</option>
-                {filterOptions.distances_m.map((d) => (
-                  <option key={d} value={d}>
-                    ≤ {d} m
-                  </option>
-                ))}
-              </select>
-            </FilterBox>
+                <FilterBox icon={<Users size={13} />} label="Segments d'audience">
+                  <select
+                    value={targetValue}
+                    onChange={(e) => applyFilter({ target: e.target.value || null })}
+                    className="select-modern"
+                  >
+                    <option value="">Tous publics</option>
+                    <option value="CSP+">CSP+ / premium</option>
+                    <option value="jeunes actifs">Jeunes actifs</option>
+                    <option value="familles">Familles</option>
+                  </select>
+                </FilterBox>
 
-            <FilterBox label="Segments d'audience">
-              <select
-                value={targetValue}
-                onChange={(e) => applyFilter({ target: e.target.value || null })}
-                className="jcd-select"
-              >
-                <option value="">Tous publics</option>
-                <option value="CSP+">CSP+ / premium</option>
-                <option value="jeunes actifs">Jeunes actifs</option>
-                <option value="familles">Familles</option>
-              </select>
-            </FilterBox>
+                <FilterBox icon={<Monitor size={13} />} label="Nombre de faces">
+                  <select
+                    value={topKValue}
+                    onChange={(e) => applyFilter({ top_k: e.target.value ? Number(e.target.value) : null })}
+                    className="select-modern"
+                  >
+                    <option value="">Auto</option>
+                    {[6, 8, 10, 12, 15].map((n) => (
+                      <option key={n} value={n}>
+                        {n} faces
+                      </option>
+                    ))}
+                  </select>
+                </FilterBox>
 
-            <FilterBox label="Nombre de faces">
-              <select
-                value={topKValue}
-                onChange={(e) => applyFilter({ top_k: e.target.value ? Number(e.target.value) : null })}
-                className="jcd-select"
-              >
-                <option value="">Auto</option>
-                {[6, 8, 10, 12, 15].map((n) => (
-                  <option key={n} value={n}>
-                    {n} faces
-                  </option>
-                ))}
-              </select>
-            </FilterBox>
-
-            <FilterBox label="Durée de campagne">
-              <select
-                value={durDaysValue}
-                onChange={(e) => applyFilter({ duration_days: e.target.value ? Number(e.target.value) : null })}
-                className="jcd-select"
-              >
-                <option value="">7 jours (par défaut)</option>
-                {[7, 14, 21, 28].map((d) => (
-                  <option key={d} value={d}>
-                    {d} jours ({d / 7} sem.)
-                  </option>
-                ))}
-              </select>
-            </FilterBox>
+                <FilterBox icon={<Clock size={13} />} label="Durée de campagne">
+                  <select
+                    value={durDaysValue}
+                    onChange={(e) => applyFilter({ duration_days: e.target.value ? Number(e.target.value) : null })}
+                    className="select-modern"
+                  >
+                    <option value="">7 jours (par défaut)</option>
+                    {[7, 14, 21, 28].map((d) => (
+                      <option key={d} value={d}>
+                        {d} jours ({d / 7} sem.)
+                      </option>
+                    ))}
+                  </select>
+                </FilterBox>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -558,13 +608,21 @@ export default function Home() {
 
 function Bubble({ role, content }: { role: "user" | "assistant"; content: string }) {
   const isUser = role === "user";
+  if (isUser) {
+    return (
+      <div className="flex justify-end">
+        <div className="max-w-[90%] rounded-2xl rounded-br-md px-3.5 py-2.5 text-sm leading-relaxed whitespace-pre-wrap bg-[#1f5f7f] text-white shadow-sm">
+          {content}
+        </div>
+      </div>
+    );
+  }
   return (
-    <div className={`flex ${isUser ? "justify-end" : "justify-start"}`}>
-      <div
-        className={`max-w-[92%] rounded-md px-3 py-2 text-sm leading-relaxed whitespace-pre-wrap ${
-          isUser ? "bg-white text-[#111]" : "bg-white/15 text-white border border-white/20"
-        }`}
-      >
+    <div className="flex justify-start gap-2">
+      <div className="h-7 w-7 shrink-0 rounded-full grid place-items-center bg-slate-100 text-[#1f5f7f]">
+        <Bot size={15} />
+      </div>
+      <div className="max-w-[85%] rounded-2xl rounded-tl-md px-3.5 py-2.5 text-sm leading-relaxed whitespace-pre-wrap bg-slate-100 text-slate-700">
         {content}
       </div>
     </div>
@@ -572,26 +630,61 @@ function Bubble({ role, content }: { role: "user" | "assistant"; content: string
 }
 
 function Dot() {
-  return <span className="h-1.5 w-1.5 rounded-full bg-white/80 animate-pulse" />;
+  return <span className="h-1.5 w-1.5 rounded-full bg-[#1f5f7f]/70 animate-pulse" />;
 }
 
-function Chip({ value, label }: { value: string; label: string }) {
+function Chip({
+  icon,
+  value,
+  label,
+  accent,
+}: {
+  icon?: React.ReactNode;
+  value: string;
+  label: string;
+  accent?: string;
+}) {
   return (
-    <div className="jcd-block py-3 px-2 text-center">
-      <div className="text-xl font-semibold leading-tight">{value}</div>
-      <div className="text-sm">{label}</div>
+    <div className="card card-hover p-4 flex items-center gap-3">
+      {icon && (
+        <div
+          className="h-11 w-11 rounded-xl grid place-items-center shrink-0"
+          style={{ backgroundColor: `${accent ?? "#1f5f7f"}1a`, color: accent ?? "#1f5f7f" }}
+        >
+          {icon}
+        </div>
+      )}
+      <div className="min-w-0">
+        <div className="text-2xl font-bold tabular-nums text-slate-900 leading-none truncate">{value}</div>
+        <div className="text-[11px] text-slate-500 uppercase tracking-wide mt-1.5">{label}</div>
+      </div>
     </div>
   );
 }
 
 function Tag({ children }: { children: React.ReactNode }) {
-  return <span className="rounded bg-white/15 border border-white/25 px-2 py-0.5">{children}</span>;
+  return (
+    <span className="text-[11px] rounded-full bg-slate-100 text-slate-600 border border-slate-200 px-2.5 py-0.5">
+      {children}
+    </span>
+  );
 }
 
-function FilterBox({ label, children }: { label: string; children: React.ReactNode }) {
+function FilterBox({
+  icon,
+  label,
+  children,
+}: {
+  icon?: React.ReactNode;
+  label: string;
+  children: React.ReactNode;
+}) {
   return (
-    <div className="jcd-block p-2.5">
-      <div className="text-xs text-center mb-1.5">{label}</div>
+    <div>
+      <label className="flex items-center gap-1.5 text-xs font-medium text-slate-600 mb-1.5">
+        {icon && <span className="text-slate-400">{icon}</span>}
+        {label}
+      </label>
       {children}
     </div>
   );
