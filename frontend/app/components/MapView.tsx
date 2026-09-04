@@ -56,7 +56,8 @@ const STYLE_OPTIONS: { value: string; label: string }[] = [
       ]
     : [{ value: 'osm', label: 'OSM' }]),
 ];
-const DEFAULT_STYLE = 'carto';
+// Carte du manager (style Mapbox custom) par défaut si un token est présent ; sinon CARTO clair.
+const DEFAULT_STYLE = MAPBOX_TOKEN ? CUSTOM_STYLE : 'carto';
 
 const MARKER_OPTIONS = [
   { value: 'dot', label: 'Points' },
@@ -64,6 +65,20 @@ const MARKER_OPTIONS = [
   { value: 'pin', label: 'Épingles' },
 ];
 const DEFAULT_MARKER = process.env.NEXT_PUBLIC_MAP_MARKER || 'dot';
+
+// Magasins = carré rouge (comme la maquette).
+const storeIcon =
+  typeof window === 'undefined'
+    ? undefined
+    : L.divIcon({
+        className: 'store-square',
+        html:
+          `<div style="width:14px;height:14px;background:${STORE};` +
+          `border:2px solid #fff;box-shadow:0 1px 3px rgba(0,0,0,.35)"></div>`,
+        iconSize: [14, 14],
+        iconAnchor: [7, 7],
+        popupAnchor: [0, -8],
+      });
 
 const pinIcon =
   typeof window === 'undefined'
@@ -244,19 +259,14 @@ export function MapView({
           />
           <FitBounds panels={panels} stores={stores} />
           {stores.map((s, i) => (
-            <CircleMarker
-              key={`store-${i}`}
-              center={[s.latitude, s.longitude]}
-              radius={8}
-              pathOptions={{ color: '#fff', weight: 2, fillColor: STORE, fillOpacity: 0.95 }}
-            >
+            <Marker key={`store-${i}`} position={[s.latitude, s.longitude]} icon={storeIcon as any}>
               <Popup>
                 <div className="text-sm">
                   <div className="font-semibold">{s.name}</div>
                   {s.address && <div className="opacity-80">{s.address}</div>}
                 </div>
               </Popup>
-            </CircleMarker>
+            </Marker>
           ))}
           {panels.slice(0, 300).map((p) => renderMarker(p, marker))}
         </MapContainer>
@@ -280,7 +290,7 @@ export function MapView({
             <span style={{ fontSize: '11.5px', color: 'var(--text-primary)', fontWeight: 500 }}>Faces</span>
           </span>
           <span className="flex items-center gap-1.5">
-            <span style={{ width: 10, height: 10, borderRadius: '50%', background: STORE, boxShadow: '0 0 0 2px #fff' }} />
+            <span style={{ width: 10, height: 10, borderRadius: 2, background: STORE, boxShadow: '0 0 0 2px #fff' }} />
             <span style={{ fontSize: '11.5px', color: 'var(--text-primary)', fontWeight: 500 }}>Magasins</span>
           </span>
         </div>

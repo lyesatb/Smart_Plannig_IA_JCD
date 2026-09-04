@@ -285,89 +285,74 @@ export default function Home() {
 
   return (
     <div style={{ minHeight: "100vh", background: "var(--bg)" }}>
-      {/* Bandeau JCDecaux (couleur JCDecaux) */}
-      <header
+      {/* Bandeau JCDecaux (hero : nav + titre) — couleur JCDecaux, vrai logo */}
+      <div
         style={{
-          background: "linear-gradient(110deg, #2b5285 0%, #1b3454 48%, #13233c 100%)",
-          position: "sticky",
-          top: 0,
-          zIndex: 100,
-          boxShadow: "0 4px 18px rgba(19,35,60,0.28)",
+          background: "linear-gradient(115deg, #2c568c 0%, #1d3a5e 45%, #14243c 100%)",
+          boxShadow: "0 6px 22px rgba(19,35,60,0.30)",
         }}
       >
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            padding: "0 28px",
-            height: 62,
-            maxWidth: 1600,
-            margin: "0 auto",
-            width: "100%",
-            color: "#fff",
-          }}
-        >
-          <div style={{ display: "flex", alignItems: "center", gap: 22 }}>
-            <div style={{ color: "#fff" }}>
-              <JcdLogo className="h-7 w-auto" />
+        <div style={{ maxWidth: 1600, margin: "0 auto", width: "100%", padding: "0 28px", color: "#fff" }}>
+          {/* Ligne nav */}
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", height: 60 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 24 }}>
+              <div style={{ color: "#fff" }}>
+                <JcdLogo className="h-7 w-auto" />
+              </div>
+              <nav style={{ display: "flex", alignItems: "center", gap: 22 }}>
+                <span style={{ fontSize: "13.5px", fontWeight: 700 }}>Construire mon dispositif</span>
+                <span style={{ fontSize: "13.5px", fontWeight: 500, color: "rgba(255,255,255,0.7)" }}>Concevoir mon visuel</span>
+              </nav>
             </div>
-            <nav style={{ display: "flex", alignItems: "center", gap: 22 }}>
-              <span style={{ fontSize: "13.5px", fontWeight: 700 }}>Construire mon dispositif</span>
-              <span style={{ fontSize: "13.5px", fontWeight: 500, color: "rgba(255,255,255,0.7)" }}>Concevoir mon visuel</span>
-            </nav>
-          </div>
-          <button
-            style={{
-              padding: "8px 18px",
-              background: "rgba(255,255,255,0.08)",
-              color: "#fff",
-              border: "1px solid rgba(255,255,255,0.35)",
-              borderRadius: "var(--radius-sm)",
-              fontSize: "13px",
-              fontWeight: 600,
-              cursor: "pointer",
-              fontFamily: "inherit",
-            }}
-          >
-            Mon espace client
-          </button>
-        </div>
-      </header>
-
-      {/* Contenu */}
-      <main style={{ maxWidth: 1600, margin: "0 auto", width: "100%", padding: "22px 28px 32px" }}>
-        <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", marginBottom: 16 }}>
-          <div>
-            <h1 style={{ margin: 0, fontSize: "24px", fontWeight: 700, color: "var(--text-primary)" }}>
-              Construire mon dispositif
-            </h1>
-            <p style={{ margin: "4px 0 0", fontSize: "13.5px", color: "var(--text-secondary)" }}>{subtitle}</p>
-          </div>
-          {messages.length > 0 && (
             <button
-              onClick={resetAll}
               style={{
-                display: "flex",
-                alignItems: "center",
-                gap: 6,
-                padding: "7px 14px",
-                background: "var(--surface)",
-                border: "1.5px solid var(--border)",
+                padding: "8px 18px",
+                background: "rgba(255,255,255,0.08)",
+                color: "#fff",
+                border: "1px solid rgba(255,255,255,0.4)",
                 borderRadius: "var(--radius-sm)",
-                color: "var(--text-secondary)",
                 fontSize: "13px",
-                fontWeight: 500,
+                fontWeight: 600,
                 cursor: "pointer",
                 fontFamily: "inherit",
-                boxShadow: "var(--shadow-sm)",
               }}
             >
-              <Plus size={14} /> Nouveau brief
+              Mon espace client
             </button>
-          )}
+          </div>
+          {/* Titre dans le bandeau */}
+          <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", padding: "8px 0 58px" }}>
+            <div>
+              <h1 style={{ margin: 0, fontSize: "26px", fontWeight: 700, color: "#fff" }}>Construire mon dispositif</h1>
+              <p style={{ margin: "5px 0 0", fontSize: "13.5px", color: "rgba(255,255,255,0.75)" }}>{subtitle}</p>
+            </div>
+            {messages.length > 0 && (
+              <button
+                onClick={resetAll}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 6,
+                  padding: "7px 14px",
+                  background: "rgba(255,255,255,0.08)",
+                  border: "1px solid rgba(255,255,255,0.4)",
+                  borderRadius: "var(--radius-sm)",
+                  color: "#fff",
+                  fontSize: "13px",
+                  fontWeight: 500,
+                  cursor: "pointer",
+                  fontFamily: "inherit",
+                }}
+              >
+                <Plus size={14} /> Nouveau brief
+              </button>
+            )}
+          </div>
         </div>
+      </div>
 
+      {/* Contenu — les KPIs chevauchent le bas du bandeau */}
+      <main style={{ maxWidth: 1600, margin: "-42px auto 0", width: "100%", padding: "0 28px 32px", position: "relative", zIndex: 1 }}>
         {/* KPIs pleine largeur */}
         <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 16, marginBottom: 16 }}>
           <KpiCard value={rec ? durationLabel : "—"} label="durée de campagne" />
