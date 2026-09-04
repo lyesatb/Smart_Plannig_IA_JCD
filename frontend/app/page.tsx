@@ -285,11 +285,11 @@ export default function Home() {
 
   return (
     <div style={{ minHeight: "100vh", background: "var(--bg)" }}>
-      {/* Bandeau JCDecaux (hero : nav + titre) — couleur JCDecaux, vrai logo */}
+      {/* Bandeau JCDecaux (hero : nav + titre) — bleu JCDecaux, vrai logo */}
       <div
         style={{
-          background: "linear-gradient(115deg, #2c568c 0%, #1d3a5e 45%, #14243c 100%)",
-          boxShadow: "0 6px 22px rgba(19,35,60,0.30)",
+          background: "linear-gradient(120deg, #4169e8 0%, #1d4ed8 46%, #1740b8 100%)",
+          boxShadow: "0 6px 22px rgba(29,78,216,0.28)",
         }}
       >
         <div style={{ maxWidth: 1600, margin: "0 auto", width: "100%", padding: "0 28px", color: "#fff" }}>
