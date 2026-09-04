@@ -288,7 +288,7 @@ export default function Home() {
       {/* Bandeau JCDecaux (hero : nav + titre) — couleur JCDecaux, vrai logo */}
       <div
         style={{
-          background: "linear-gradient(115deg, #2c568c 0%, #1d3a5e 45%, #14243c 100%)",
+          background: "linear-gradient(115deg, #2f5789 0%, #1f3b62 50%, #152740 100%)",
           boxShadow: "0 6px 22px rgba(19,35,60,0.30)",
         }}
       >
@@ -554,7 +554,7 @@ function navyBtn(disabled: boolean): React.CSSProperties {
     alignItems: "center",
     justifyContent: "center",
     gap: 8,
-    boxShadow: "0 4px 12px rgba(22,40,62,0.28)",
+    boxShadow: "0 4px 12px rgba(31,59,98,0.28)",
     opacity: disabled ? 0.45 : 1,
   };
 }
@@ -603,7 +603,7 @@ function Tag({ children }: { children: React.ReactNode }) {
         display: "inline-flex",
         alignItems: "center",
         padding: "4px 12px",
-        background: "rgba(22,40,62,0.10)",
+        background: "rgba(31,59,98,0.10)",
         border: "none",
         borderRadius: 999,
         color: "var(--navy)",
@@ -628,7 +628,7 @@ function FaceCard({ num, p }: { num: number; p: Panel }) {
           </span>
         </span>
         {p.distance_m != null && (
-          <span style={{ background: "rgba(22,40,62,0.08)", color: "var(--navy)", borderRadius: 6, padding: "2px 8px", fontSize: "11px", fontWeight: 700, whiteSpace: "nowrap" }}>
+          <span style={{ background: "rgba(31,59,98,0.08)", color: "var(--navy)", borderRadius: 6, padding: "2px 8px", fontSize: "11px", fontWeight: 700, whiteSpace: "nowrap" }}>
             {fmtInt(p.distance_m)} m
           </span>
         )}
