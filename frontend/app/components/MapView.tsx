@@ -30,9 +30,40 @@ export type Store = {
   arrondissement?: number | null;
 };
 
-// Bleu marine JCDecaux pour les faces ; rouge pour les magasins de l'enseigne.
-const NAVY = '#1e3a8a';
-const STORE_RED = '#b91c1c';
+// Couleurs Figma : faces violettes, magasins rouge JCDecaux.
+const FACE = '#7c3aed';
+const STORE = '#e2001a';
+
+const MAPBOX_TOKEN = process.env.NEXT_PUBLIC_MAPBOX_TOKEN;
+
+function normalizeStylePath(raw: string): string {
+  const v = (raw || '').replace(/^mapbox:\/\/styles\//, '').trim();
+  return v.includes('/') ? v : `mapbox/${v}`;
+}
+
+const CUSTOM_STYLE = normalizeStylePath(
+  process.env.NEXT_PUBLIC_MAPBOX_CUSTOM_STYLE || 'cyrilh/cmewqxmu4002u01segssr9is7',
+);
+const CUSTOM_LABEL = process.env.NEXT_PUBLIC_MAPBOX_CUSTOM_LABEL || 'JCDecaux';
+
+const STYLE_OPTIONS: { value: string; label: string }[] = [
+  ...(MAPBOX_TOKEN ? [{ value: CUSTOM_STYLE, label: CUSTOM_LABEL }] : []),
+  { value: 'carto', label: 'Clair' },
+  ...(MAPBOX_TOKEN
+    ? [
+        { value: 'mapbox/dark-v11', label: 'Sombre' },
+        { value: 'mapbox/satellite-streets-v12', label: 'Satellite' },
+      ]
+    : [{ value: 'osm', label: 'OSM' }]),
+];
+const DEFAULT_STYLE = MAPBOX_TOKEN ? CUSTOM_STYLE : 'carto';
+
+const MARKER_OPTIONS = [
+  { value: 'dot', label: 'Points' },
+  { value: 'ring', label: 'Ronds' },
+  { value: 'pin', label: 'Épingles' },
+];
+const DEFAULT_MARKER = process.env.NEXT_PUBLIC_MAP_MARKER || 'dot';
 
 const pinIcon =
   typeof window === 'undefined'
@@ -46,50 +77,33 @@ const pinIcon =
         popupAnchor: [1, -34],
       });
 
-// Carte : tuiles Mapbox si un token est fourni, sinon OpenStreetMap (gratuit, sans clé).
-const MAPBOX_TOKEN = process.env.NEXT_PUBLIC_MAPBOX_TOKEN;
-
-function normalizeStylePath(raw: string): string {
-  const v = (raw || '').replace(/^mapbox:\/\/styles\//, '').trim();
-  return v.includes('/') ? v : `mapbox/${v}`;
-}
-
-const CUSTOM_STYLE = normalizeStylePath(
-  process.env.NEXT_PUBLIC_MAPBOX_CUSTOM_STYLE || 'cyrilh/cmewqxmu4002u01segssr9is7',
-);
-const CUSTOM_LABEL = process.env.NEXT_PUBLIC_MAPBOX_CUSTOM_LABEL || 'JCDecaux';
-const DEFAULT_STYLE = normalizeStylePath(process.env.NEXT_PUBLIC_MAPBOX_STYLE || 'light-v11');
-
-const MAPBOX_STYLES: { path: string; label: string }[] = [
-  ...(CUSTOM_STYLE ? [{ path: CUSTOM_STYLE, label: CUSTOM_LABEL }] : []),
-  { path: 'mapbox/light-v11', label: 'Clair' },
-  { path: 'mapbox/streets-v12', label: 'Rues' },
-  { path: 'mapbox/dark-v11', label: 'Sombre' },
-  { path: 'mapbox/satellite-streets-v12', label: 'Satellite' },
-];
-
-const MARKER_STYLES: { id: string; label: string }[] = [
-  { id: 'dot', label: 'Points' },
-  { id: 'ring', label: 'Ronds' },
-  { id: 'pin', label: 'Épingles' },
-];
-const DEFAULT_MARKER = process.env.NEXT_PUBLIC_MAP_MARKER || 'dot';
-
-function tileFor(stylePath: string) {
-  if (MAPBOX_TOKEN) {
+function tileFor(style: string) {
+  if (style === 'osm') {
     return {
-      url: `https://api.mapbox.com/styles/v1/${stylePath}/tiles/512/{z}/{x}/{y}@2x?access_token=${MAPBOX_TOKEN}`,
+      url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+      tileSize: 256,
+      zoomOffset: 0,
+      subdomains: 'abc',
+    };
+  }
+  if (style === 'carto' || !MAPBOX_TOKEN) {
+    return {
+      url: 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png',
       attribution:
-        '&copy; <a href="https://www.mapbox.com/about/maps/">Mapbox</a> &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
-      tileSize: 512,
-      zoomOffset: -1,
+        '&copy; <a href="https://carto.com/">CARTO</a> &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+      tileSize: 256,
+      zoomOffset: 0,
+      subdomains: 'abcd',
     };
   }
   return {
-    url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
-    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
-    tileSize: 256,
-    zoomOffset: 0,
+    url: `https://api.mapbox.com/styles/v1/${style}/tiles/512/{z}/{x}/{y}@2x?access_token=${MAPBOX_TOKEN}`,
+    attribution:
+      '&copy; <a href="https://www.mapbox.com/about/maps/">Mapbox</a> &copy; OpenStreetMap',
+    tileSize: 512,
+    zoomOffset: -1,
+    subdomains: 'abc',
   };
 }
 
@@ -97,19 +111,6 @@ function fmtInt(n?: number | null) {
   if (typeof n !== 'number' || !Number.isFinite(n)) return '—';
   return new Intl.NumberFormat('fr-FR').format(Math.round(n));
 }
-
-const storeIcon =
-  typeof window === 'undefined'
-    ? undefined
-    : L.divIcon({
-        className: 'store-marker',
-        html:
-          `<div style="width:16px;height:16px;border-radius:4px;background:${STORE_RED};` +
-          `border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.45)"></div>`,
-        iconSize: [16, 16],
-        iconAnchor: [8, 8],
-        popupAnchor: [0, -10],
-      });
 
 function PanelPopup({ p }: { p: Panel }) {
   return (
@@ -127,7 +128,7 @@ function PanelPopup({ p }: { p: Panel }) {
         )}
         {typeof p.daily_traffic === 'number' && (
           <div className="mt-1">
-            Audience : <b>{fmtInt(p.daily_traffic)}</b> passages/jour
+            {fmtInt(p.daily_traffic)} passages/jour
             {typeof p.impressions === 'number' ? ` · ≈ ${fmtInt(p.impressions)} impressions` : ''}
           </div>
         )}
@@ -150,13 +151,12 @@ function renderMarker(p: Panel, style: string) {
     <CircleMarker
       key={key}
       center={[p.latitude, p.longitude]}
-      radius={ring ? 8 : 7}
+      radius={9}
       pathOptions={{
-        color: NAVY,
-        fillColor: NAVY,
-        weight: ring ? 2.5 : 1.5,
-        opacity: 0.95,
-        fillOpacity: ring ? 0.15 : 0.9,
+        color: '#fff',
+        weight: 2,
+        fillColor: FACE,
+        fillOpacity: ring ? 0.2 : 0.92,
       }}
     >
       <PanelPopup p={p} />
@@ -164,7 +164,6 @@ function renderMarker(p: Panel, style: string) {
   );
 }
 
-/** Recentre / recadre la carte quand le dispositif change. */
 function FitBounds({ panels, stores }: { panels: Panel[]; stores: Store[] }) {
   const map = useMap();
   useEffect(() => {
@@ -177,47 +176,15 @@ function FitBounds({ panels, stores }: { panels: Panel[]; stores: Store[] }) {
       map.setView(pts[0], 14);
       return;
     }
-    map.fitBounds(L.latLngBounds(pts), { padding: [32, 32], maxZoom: 15 });
+    map.fitBounds(L.latLngBounds(pts), { padding: [30, 30], maxZoom: 15 });
   }, [map, panels, stores]);
   return null;
-}
-
-function MapSelect({
-  label,
-  value,
-  onChange,
-  options,
-}: {
-  label: string;
-  value: string;
-  onChange: (v: string) => void;
-  options: { value: string; label: string }[];
-}) {
-  return (
-    <div className="flex items-center gap-2 justify-end">
-      <span className="hidden sm:inline text-[11px] text-[#1f5f7f] bg-white/90 rounded-md px-2 py-1 shadow">
-        {label}
-      </span>
-      <select
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        aria-label={label}
-        className="rounded-md bg-white/95 border border-[#1f5f7f]/30 text-[#0f2a3a] text-xs px-2.5 py-1.5 shadow outline-none cursor-pointer hover:border-[#1f5f7f]"
-      >
-        {options.map((o) => (
-          <option key={o.value} value={o.value}>
-            {o.label}
-          </option>
-        ))}
-      </select>
-    </div>
-  );
 }
 
 export function MapView({
   panels,
   stores = [],
-  height = 520,
+  height = 460,
 }: {
   panels: Panel[];
   stores?: Store[];
@@ -227,70 +194,93 @@ export function MapView({
   const [marker, setMarker] = useState<string>(DEFAULT_MARKER);
 
   const center: [number, number] =
-    panels.length > 0 ? [panels[0].latitude, panels[0].longitude] : [48.8566, 2.3522];
+    panels.length > 0 ? [panels[0].latitude, panels[0].longitude] : [48.8435, 2.2985];
 
   const tile = tileFor(style);
 
   return (
-    <div
-      className="relative rounded-xl overflow-hidden bg-slate-800/40 border border-white/10"
-      style={{ height }}
-    >
-      <div className="absolute top-3 right-3 z-[1000] flex flex-col gap-2">
-        {MAPBOX_TOKEN && (
-          <MapSelect
-            label="Fond"
-            value={style}
-            onChange={setStyle}
-            options={MAPBOX_STYLES.map((s) => ({ value: s.path, label: s.label }))}
-          />
-        )}
-        <MapSelect
-          label="Faces"
-          value={marker}
-          onChange={setMarker}
-          options={MARKER_STYLES.map((s) => ({ value: s.id, label: s.label }))}
-        />
+    <div>
+      {/* Toolbar */}
+      <div
+        className="flex items-center justify-end gap-2"
+        style={{
+          padding: '10px 14px',
+          borderBottom: '1px solid var(--border)',
+          background: 'var(--surface-alt)',
+        }}
+      >
+        <label style={{ fontSize: '11.5px', color: 'var(--text-secondary)', fontWeight: 500 }}>Fond</label>
+        <select value={style} onChange={(e) => setStyle(e.target.value)} className="fig-select fig-select-sm" style={{ width: 'auto' }}>
+          {STYLE_OPTIONS.map((o) => (
+            <option key={o.value} value={o.value}>
+              {o.label}
+            </option>
+          ))}
+        </select>
+        <label style={{ fontSize: '11.5px', color: 'var(--text-secondary)', fontWeight: 500 }}>Faces</label>
+        <select value={marker} onChange={(e) => setMarker(e.target.value)} className="fig-select fig-select-sm" style={{ width: 'auto' }}>
+          {MARKER_OPTIONS.map((o) => (
+            <option key={o.value} value={o.value}>
+              {o.label}
+            </option>
+          ))}
+        </select>
       </div>
 
-      {stores.length > 0 && (
-        <div className="absolute bottom-3 left-3 z-[1000] flex items-center gap-3 text-[11px] bg-white/90 rounded-md px-2.5 py-1.5 shadow text-[#0f2a3a]">
-          <span className="inline-flex items-center gap-1">
-            <span className="inline-block h-3 w-3 rounded-full" style={{ background: NAVY }} /> Faces
+      {/* Map */}
+      <div style={{ height, position: 'relative' }}>
+        <MapContainer center={center} zoom={14} scrollWheelZoom preferCanvas className="h-full w-full">
+          <TileLayer
+            key={style}
+            attribution={tile.attribution}
+            url={tile.url}
+            tileSize={tile.tileSize}
+            zoomOffset={tile.zoomOffset}
+            subdomains={tile.subdomains}
+          />
+          <FitBounds panels={panels} stores={stores} />
+          {stores.map((s, i) => (
+            <CircleMarker
+              key={`store-${i}`}
+              center={[s.latitude, s.longitude]}
+              radius={8}
+              pathOptions={{ color: '#fff', weight: 2, fillColor: STORE, fillOpacity: 0.95 }}
+            >
+              <Popup>
+                <div className="text-sm">
+                  <div className="font-semibold">{s.name}</div>
+                  {s.address && <div className="opacity-80">{s.address}</div>}
+                </div>
+              </Popup>
+            </CircleMarker>
+          ))}
+          {panels.slice(0, 300).map((p) => renderMarker(p, marker))}
+        </MapContainer>
+
+        {/* Légende */}
+        <div
+          className="absolute z-[999] flex items-center gap-3.5"
+          style={{
+            bottom: 14,
+            left: 14,
+            background: 'rgba(255,255,255,0.95)',
+            backdropFilter: 'blur(8px)',
+            borderRadius: 8,
+            padding: '7px 12px',
+            boxShadow: 'var(--shadow-md)',
+            border: '1px solid var(--border)',
+          }}
+        >
+          <span className="flex items-center gap-1.5">
+            <span style={{ width: 10, height: 10, borderRadius: '50%', background: FACE, boxShadow: '0 0 0 2px #fff' }} />
+            <span style={{ fontSize: '11.5px', color: 'var(--text-primary)', fontWeight: 500 }}>Faces</span>
           </span>
-          <span className="inline-flex items-center gap-1">
-            <span className="inline-block h-3 w-3 rounded-sm" style={{ background: STORE_RED }} /> Magasins
+          <span className="flex items-center gap-1.5">
+            <span style={{ width: 10, height: 10, borderRadius: '50%', background: STORE, boxShadow: '0 0 0 2px #fff' }} />
+            <span style={{ fontSize: '11.5px', color: 'var(--text-primary)', fontWeight: 500 }}>Magasins</span>
           </span>
         </div>
-      )}
-
-      <MapContainer
-        center={center}
-        zoom={12}
-        scrollWheelZoom={true}
-        preferCanvas={true}
-        className="h-full w-full"
-      >
-        <TileLayer
-          key={style}
-          attribution={tile.attribution}
-          url={tile.url}
-          tileSize={tile.tileSize}
-          zoomOffset={tile.zoomOffset}
-        />
-        <FitBounds panels={panels} stores={stores} />
-        {stores.map((s, i) => (
-          <Marker key={`store-${i}`} position={[s.latitude, s.longitude]} icon={storeIcon as any}>
-            <Popup>
-              <div className="text-sm">
-                <div className="font-semibold">{s.name}</div>
-                {s.address && <div className="opacity-80">{s.address}</div>}
-              </div>
-            </Popup>
-          </Marker>
-        ))}
-        {panels.slice(0, 200).map((p) => renderMarker(p, marker))}
-      </MapContainer>
+      </div>
     </div>
   );
 }
