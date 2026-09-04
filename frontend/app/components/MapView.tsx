@@ -233,7 +233,7 @@ export function MapView({
 
   return (
     <div
-      className="relative rounded-xl overflow-hidden bg-slate-100 border border-slate-200"
+      className="relative rounded-xl overflow-hidden bg-slate-800/40 border border-white/10"
       style={{ height }}
     >
       <div className="absolute top-3 right-3 z-[1000] flex flex-col gap-2">
