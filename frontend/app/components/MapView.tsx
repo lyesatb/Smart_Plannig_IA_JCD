@@ -31,7 +31,7 @@ export type Store = {
 };
 
 // Faces = couleur JCDecaux (navy) ; magasins = rouge JCDecaux.
-const FACE = '#21497a';
+const FACE = '#265aa0';
 const STORE = '#e2001a';
 
 const MAPBOX_TOKEN = process.env.NEXT_PUBLIC_MAPBOX_TOKEN;

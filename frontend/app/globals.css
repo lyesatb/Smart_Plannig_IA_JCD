@@ -4,9 +4,9 @@
 @tailwind utilities;
 
 :root {
-  --navy: #21497a;
-  --navy-light: #2b568a;
-  --navy-muted: #3a6aa3;
+  --navy: #265aa0;
+  --navy-light: #2f68b0;
+  --navy-muted: #4a82c8;
   --red: #e2001a;
   --red-hover: #c8001a;
   --bg: #f0f2f5;
