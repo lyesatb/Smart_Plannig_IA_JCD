@@ -7,6 +7,7 @@ import httpx
 
 from app.config.settings import get_settings
 from app.services.recommendation_service import recommend_panels, get_kpis, get_panels_preview
+from app.services.geo import list_enseignes, normalize_enseigne
 from app.services.export_service import build_eligible_parc_excel, build_plan_excel
 from app.services.chat_service import handle_chat
 from app.rag.ingest import ingest_rag_docs
@@ -22,18 +23,30 @@ class RecommendationRequest(BaseModel):
     target: Optional[str] = None
     industry: Optional[str] = None
     budget: Optional[float] = None
-    duration_days: Optional[int] = 14
+    duration_days: Optional[int] = 7
     objective: Optional[str] = "performance"
     poi: Optional[str] = None
     top_k: Optional[int] = 20
+    per_city: Optional[int] = None
+    city_quotas: Optional[dict[str, int]] = None
+    enseigne: Optional[str] = None
+    arrondissement: Optional[int] = None
+    max_distance_m: Optional[int] = None
 
 
 class ExportScoringPoolRequest(RecommendationRequest):
     """Critères + textes IA déjà générés pour les panneaux retenus."""
     recommendation_explanations: Optional[dict[str, str]] = None
 
+class ChatTurn(BaseModel):
+    role: str
+    content: str
+
+
 class ChatRequest(BaseModel):
     message: str
+    history: Optional[list[ChatTurn]] = None
+    prior_criteria: Optional[dict] = None
 
 class RagQueryRequest(BaseModel):
     query: str
@@ -93,11 +106,25 @@ def panels(city: Optional[str] = None, limit: int = 200):
 
 @router.post("/recommendation")
 def recommendation(req: RecommendationRequest):
-    return recommend_panels(req.dict())
+    data = req.model_dump(exclude_none=True)
+    if data.get("enseigne"):
+        data["enseigne"] = normalize_enseigne(data["enseigne"]) or data["enseigne"]
+    return recommend_panels(data)
+
+
+@router.get("/enseignes")
+def enseignes():
+    """Enseignes disponibles (magasins simulés) + arrondissements de Paris, pour les filtres."""
+    return {
+        "enseignes": list_enseignes(),
+        "arrondissements": list(range(1, 21)),
+        "distances_m": [300, 500, 800, 1200, 2000],
+    }
 
 @router.post("/chat")
 def chat(req: ChatRequest):
-    return handle_chat(req.message)
+    history = [t.model_dump() for t in (req.history or [])]
+    return handle_chat(req.message, history=history, prior_criteria=req.prior_criteria)
 
 
 @router.post("/export/plan-retenu")

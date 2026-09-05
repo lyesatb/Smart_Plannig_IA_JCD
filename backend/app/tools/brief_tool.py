@@ -18,9 +18,14 @@ class Brief(BaseModel):
     budget: float | None = None
     objective: str | None = None
     poi: str | None = None
-    duration_days: int = 14
+    duration_days: int = 7
     industry: str | None = None
     top_k: int | None = None
+    per_city: int | None = None
+    city_quotas: dict[str, int] | None = None
+    enseigne: str | None = None
+    arrondissement: int | None = None
+    max_distance_m: int | None = None
 
 
 class BriefToolOutput(BaseModel):
@@ -32,17 +37,39 @@ _SYSTEM = (
     "Ne devine pas: si une info n'est pas présente, mets null. "
     "Si plusieurs villes sont citées (Paris, Lyon, Bordeaux…), remplis cities (liste) et laisse city à null. "
     "Une seule ville → city uniquement. "
-    "top_k = nombre de panneaux (6-12) si précisé ou déduit du budget; sinon null."
+    "top_k = nombre de panneaux (6-12) si précisé ou déduit du budget; sinon null. "
+    "Nombre de panneaux PAR ville : « 5 pour chaque » / « 5 par ville » → per_city=5. "
+    "« 8 pour Lyon et 2 pour Paris » → city_quotas={\"Lyon\":8,\"Paris\":2}. "
+    "Si « pour chaque / par ville » est présent, remplis per_city (et laisse city_quotas null) : "
+    "ignore les nombres qui décrivent un PLAN PRÉCÉDENT (ex. « tu avais mis 8 pour Lyon »). "
+    "Proximité d'une enseigne / de magasins (ex. « à proximité des magasins Maison Nicolas ») → "
+    "enseigne=\"Nicolas\" (nom court de l'enseigne, sans « magasins »/« maison »). "
+    "Arrondissement de Paris (« dans le 15ème », « Paris 15 ») → arrondissement=15 et city=\"Paris\". "
+    "Rayon demandé (« à moins de 300 m », « dans un rayon de 1 km ») → max_distance_m en mètres ; sinon null."
+)
+
+_SYSTEM_CONVERSATION = (
+    "L'INPUT est une conversation : plusieurs demandes successives du même client "
+    "(de la plus ancienne à la plus récente). Déduis le brief CUMULÉ actuel. "
+    "En cas de contradiction (ex. « Paris » puis « plutôt Lyon »), la DERNIÈRE demande "
+    "prime et remplace l'ancienne valeur. Les informations non modifiées restent valables."
 )
 
 
-def brief_extraction_tool(message: str) -> dict[str, Any]:
+def brief_extraction_tool(
+    message: str,
+    latest_message: str | None = None,
+    is_conversation: bool = False,
+) -> dict[str, Any]:
+    """Extraction du brief. `message` peut être une conversation multi-tours ;
+    `latest_message` (dernier message client) sert au post-traitement heuristique."""
     settings = get_settings()
     llm = get_chat_llm(settings, task=GroqTask.EXTRACTION)
 
     schema = BriefToolOutput.model_json_schema()
+    system = f"{_SYSTEM}\n{_SYSTEM_CONVERSATION}" if is_conversation else _SYSTEM
     prompt = (
-        f"{_SYSTEM}\n\n"
+        f"{system}\n\n"
         "Retourne STRICTEMENT un JSON valide suivant ce schéma.\n"
         f"SCHEMA:\n{schema}\n\n"
         f"INPUT:\n{message}\n"
@@ -58,6 +85,6 @@ def brief_extraction_tool(message: str) -> dict[str, Any]:
         data = {"brief": data}
     out = BriefToolOutput.model_validate(data).model_dump()
     brief = out.get("brief") or {}
-    criteria = brief_to_scoring_criteria(brief, message)
+    criteria = brief_to_scoring_criteria(brief, latest_message or message)
     out["brief"] = criteria
     return out

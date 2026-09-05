@@ -241,11 +241,21 @@ def _why_panel_selected(
 ) -> list[str]:
     """Raisons moteur scoring — à traduire en recommandation panneau."""
     reasons: list[str] = []
-    fmt = p.get("format") or "écran DOOH"
     poi = str(p.get("poi_nearby") or "")
-    score = p.get("smart_score")
-    reasons.append(f"Retenu en position #{rank}/{total} du plan (score moteur {score}).")
-    reasons.append(f"Support exact : {fmt}, POI {poi or '—'}.")
+    addr = str(p.get("address") or "").strip()
+    reasons.append(f"Retenu en position #{rank}/{total} du dispositif.")
+    reasons.append(f"Emplacement : {addr or 'panneau'}, POI {poi or '—'}.")
+    if p.get("distance_m") is not None and brief.get("enseigne"):
+        reasons.append(
+            f"À {int(p['distance_m'])} m du magasin {brief['enseigne']} le plus proche "
+            f"({p.get('nearest_store') or '—'})."
+        )
+    if p.get("daily_traffic"):
+        reasons.append(
+            f"Audience : environ {int(p['daily_traffic']):,} passages/jour".replace(",", " ")
+            + (f", ≈ {int(p['impressions']):,} impressions sur la campagne".replace(",", " ") if p.get("impressions") else "")
+            + "."
+        )
 
     brief_poi = str(brief.get("poi") or "").lower()
     if brief_poi and brief_poi in poi.lower():
@@ -265,17 +275,15 @@ def _why_panel_selected(
 
 
 def _panel_label(p: dict[str, Any]) -> str:
-    fmt = p.get("format") or "écran"
+    addr = str(p.get("address") or "").strip()
     poi = p.get("poi_nearby")
     city = p.get("city")
-    district = p.get("district")
-    base = f"{fmt}"
+    arr = p.get("arrondissement")
+    base = addr or "panneau"
     if poi:
         base += f", POI {poi}"
-    if city and district:
-        base += f", {city} — {district}"
-    elif city:
-        base += f", {city}"
+    if city:
+        base += f", {city}" + (f" {int(arr)}e" if arr else "")
     return base
 
 
@@ -288,14 +296,24 @@ def _panel_facts(
     total: int,
 ) -> dict[str, Any]:
     """Fiche CE panneau — pas le quartier en général."""
-    return {
+    facts: dict[str, Any] = {
         "panel_id": p.get("panel_id"),
         "panneau_a_justifier": _panel_label(p),
-        "format": p.get("format"),
+        "adresse": p.get("address"),
         "poi": p.get("poi_nearby"),
-        "quartier": p.get("district"),
         "ville": p.get("city"),
-        "score_moteur": p.get("smart_score"),
+    }
+    if p.get("arrondissement"):
+        facts["arrondissement"] = f"{p['arrondissement']}e"
+    if p.get("daily_traffic"):
+        facts["audience_passages_jour"] = int(p["daily_traffic"])
+    if p.get("impressions"):
+        facts["impressions_campagne"] = int(p["impressions"])
+    if p.get("distance_m") is not None and brief.get("enseigne"):
+        facts["enseigne"] = brief.get("enseigne")
+        facts["distance_magasin_m"] = int(p["distance_m"])
+        facts["magasin_le_plus_proche"] = p.get("nearest_store")
+    facts.update({
         "raisons_selection": _why_panel_selected(p, brief, rank, total),
         "atouts_qualitatifs": _qualitative_strengths(p),
         "lien_poi_campagne": _poi_business_link(
@@ -307,17 +325,16 @@ def _panel_facts(
         "profil_audience": _planner_hints(p, brief),
         "angle_redaction": STYLE_HINTS[index % len(STYLE_HINTS)],
         "structure_imposee": STRUCTURE_HINTS[index % len(STRUCTURE_HINTS)],
-    }
+    })
+    return facts
 
 
 def _is_kpi_dump(expl: str, panel: dict[str, Any]) -> bool:
     el = expl.lower()
-    if re.search(r"\bscore\s+smart\b", el) or "smart_score" in el:
+    if re.search(r"\bscore\b", el) or "smart_score" in el or "scoring" in el:
+        # Le client ne veut pas entendre parler de score / note interne.
         return True
     if re.search(r"\d{2,}\s*%", el) and ("visibilité" in el or "csp" in el):
-        return True
-    traffic = panel.get("daily_traffic")
-    if traffic and str(int(traffic)) in expl.replace(" ", ""):
         return True
     return False
 
@@ -412,13 +429,13 @@ def _is_template_echo(expl: str) -> bool:
 
 def _mentions_panel_asset(expl: str, panel: dict[str, Any]) -> bool:
     el = expl.lower()
-    fmt = str(panel.get("format") or "").lower()
     poi = str(panel.get("poi_nearby") or "").lower()
-    if fmt and fmt in el:
-        return True
     if poi and poi in el:
         return True
-    return "écran" in el or "galerie" in el or "dooh" in el or "face" in el
+    return (
+        "panneau" in el or "face" in el or "support" in el
+        or "écran" in el or "galerie" in el or "dooh" in el or "magasin" in el
+    )
 
 
 def _is_panel_focused(expl: str, panel: dict[str, Any]) -> bool:
@@ -448,8 +465,11 @@ def _is_panel_focused(expl: str, panel: dict[str, Any]) -> bool:
 
 
 def _links_campaign_brief(expl: str, brief: dict[str, Any], panel: dict[str, Any]) -> bool:
-    """Doit relier campagne (secteur/cible) au POI ou au panneau."""
+    """Doit relier campagne (secteur/cible/enseigne) au POI ou au panneau."""
     el = expl.lower()
+    ens = (brief.get("enseigne") or "").lower()
+    if ens and (ens in el or re.search(r"\b\d{2,4}\s*m\b", el) or "magasin" in el):
+        return True
     ind = (brief.get("industry") or "").lower()
     if ind and ind in el:
         return True
@@ -580,17 +600,33 @@ def _build_prompt(
         contexts.append(_panel_facts(p, brief, panel_offset + i, rank=rank, total=total))
     n = len(panels)
     intent = _campaign_intent(brief)
+    proximity = bool(brief.get("enseigne"))
+    no_format = (
+        "NE CITE JAMAIS le type ni le format du support (2m2, 8m2, écran, totem, DOOH, "
+        "« grand format »…) : parle simplement de « ce panneau » ou « cette face ». "
+        "Situe le support par son ADRESSE (champ « adresse ») et son arrondissement.\n"
+    )
+    client_rules = no_format + (
+        "Le lecteur est le CLIENT annonceur : parle audience (passages/jour, impressions), "
+        "distance au magasin de son enseigne (distance_magasin_m, magasin_le_plus_proche) et "
+        "arrondissement/zone. INTERDIT ABSOLU : les mots « score », « scoring », « note ».\n"
+        if proximity
+        else
+        "Le lecteur est le CLIENT annonceur : parle audience (passages/jour, impressions) et contexte "
+        "du lieu. INTERDIT ABSOLU : les mots « score », « scoring », « note ».\n"
+    )
     if n == 1:
         ctx = contexts[0]
         return (
             "Tu es planner média DOOH JCDecaux. Rédige la recommandation client pour CE panneau sélectionné.\n"
+            + client_rules +
             "STYLE ATTENDU (exemple à imiter pour la forme, pas le contenu) :\n"
             f"« {PLANNER_STYLE_EXAMPLE} »\n"
             "Rédige 2-4 phrases (80-120 mots), ton planner, structure_imposee du JSON (OBLIGATOIRE, chaque panneau différent).\n"
             "Contenu : lien POI ↔ campagne (lien_poi_campagne) + atouts_qualitatifs + pourquoi CE panneau vs un autre.\n"
             "INTERDIT formules répétitives : « complète le plan », « Son profil d'audience et sa visibilité soutiennent », "
             "« Cette face X près du Y complète le plan ».\n"
-            "INTERDIT : copier l'exemple, lister Paris/Lyon/Bordeaux, %, trafic chiffré, « gamme bio » "
+            "INTERDIT : copier l'exemple, lister Paris/Lyon/Bordeaux, %, « gamme bio » "
             "si le brief n'est pas alimentaire/bio.\n"
             f"POI brief : {brief.get('poi') or '—'} — le texte doit coller à CE POI du panneau, pas un autre contexte.\n"
             f"{_diversity_block(existing or [])}"
@@ -600,7 +636,8 @@ def _build_prompt(
         )
     return (
         "Planner DOOH JCDecaux — une explanation par panneau = POURQUOI CE PANNEAU est retenu.\n"
-        "Chaque texte : commence par « Ce panneau »/« Cette face » + format + POI ; 3 phrases ; unique.\n"
+        + client_rules +
+        "Chaque texte : commence par « Ce panneau »/« Cette face » + adresse/lieu ; 3 phrases ; unique.\n"
         "Pas de discours sur le quartier/ville en général — uniquement CE support listé.\n"
         f"{_diversity_block(existing or [])}"
         f"Intention campagne : {intent}\n"
@@ -618,70 +655,103 @@ def _fallback_explanation(
     total: int = 1,
     existing: list[str] | None = None,
 ) -> str:
-    """Recommandation panneau (pas zone) — texte de secours."""
-    fmt = panel.get("format") or "écran DOOH"
+    """Recommandation panneau (pas zone) — texte de secours. On ne cite jamais le format."""
     poi = panel.get("poi_nearby") or "zone urbaine"
     city = panel.get("city") or ""
-    district = panel.get("district") or ""
     target = brief.get("target") or "grand public"
     industry = brief.get("industry") or "la marque"
     objective = brief.get("objective") or "visibilité"
-    score = panel.get("smart_score")
-    reasons = _why_panel_selected(panel, brief, rank, total)
-    r1 = reasons[1] if len(reasons) > 1 else ""
 
     link = _poi_business_link(poi, industry, target, brief)
     strengths = _qualitative_strengths(panel)
     vis = strengths[0] if strengths else "bonne visibilité"
     aud = strengths[1] if len(strengths) > 1 else "audience qualifiée"
-    place = f"{city} — {district}" if district else city
+    arr = panel.get("arrondissement")
+    place = f"Paris {int(arr)}e" if arr else (city or "la zone")
+    addr = str(panel.get("address") or "").strip()
+    where = f"{addr}, {place}" if addr else place
     slot = (index + rank) % 10
+
+    def _n(v: Any) -> str:
+        return f"{int(v):,}".replace(",", " ")
+
+    # Brief de proximité d'enseigne : le client veut la distance au magasin et l'audience.
+    if brief.get("enseigne") and panel.get("distance_m") is not None:
+        ens = brief["enseigne"]
+        d = int(panel["distance_m"])
+        store = panel.get("nearest_store") or f"magasin {ens}"
+        traffic = _n(panel.get("daily_traffic") or 0)
+        impr = _n(panel.get("impressions") or 0)
+        prox_templates = [
+            (
+                f"Ce panneau est implanté {where}, à {d} m du {store} : il capte environ {traffic} passages "
+                f"par jour, soit ≈ {impr} impressions sur la campagne. Une face idéale pour toucher la clientèle "
+                f"{ens} juste avant l'entrée en magasin."
+            ),
+            (
+                f"À {d} m seulement du {store}, cette face ({where}) touche ≈ {traffic} personnes chaque jour. "
+                f"Sur la durée, cela représente près de {impr} impressions au plus près du point de vente {ens}."
+            ),
+            (
+                f"Cette face, {where}, est retenue pour sa proximité immédiate avec le {store} ({d} m) et son "
+                f"audience de {traffic} passages/jour — ≈ {impr} impressions qui accompagnent le client jusqu'au magasin."
+            ),
+            (
+                f"Placé à {d} m du {store} ({where}), ce panneau offre une {vis} et une {aud} : "
+                f"{traffic} passages quotidiens, soit ≈ {impr} impressions dans la zone de chalandise {ens}."
+            ),
+        ]
+        for offset in range(len(prox_templates)):
+            text = prox_templates[(slot + offset) % len(prox_templates)]
+            if not existing or not _too_similar(text, existing, threshold=0.30):
+                return text
+        return prox_templates[slot % len(prox_templates)]
 
     templates: list[str] = [
         (
-            f"En utilisant ce panneau {fmt} situé près d'un {poi} à {place}, nous pouvons {link}. "
+            f"En utilisant ce panneau situé près d'un {poi} ({where}), nous pouvons {link}. "
             f"La {vis} de ce support et son {aud} permettent de maximiser l'impact de la campagne "
             f"{industry} et d'atteindre les consommateurs cibles ({target})."
         ),
         (
-            f"La proximité du {poi} autour de ce {fmt} à {city} place la marque {industry} au bon moment "
+            f"La proximité du {poi} autour de ce panneau ({where}) place la marque {industry} au bon moment "
             f"du parcours client : {link}. "
             f"On capitalise ici sur la {vis} et une {aud} pour délivrer l'objectif « {objective} »."
         ),
         (
-            f"Pour toucher {target}, ce {fmt} installé face au {poi} ({place}) crée une opportunité média "
+            f"Pour toucher {target}, cette face installée face au {poi} ({where}) crée une opportunité média "
             f"spécifique : {link}. "
             f"Le support se distingue par sa {vis}, gage de mémorisation pour la campagne {industry}."
         ),
         (
-            f"Placer la campagne {industry} sur ce {fmt} près du {poi} à {city} permet de {link}. "
-            f"La {vis} et la {aud} de ce panneau renforcent la cohérence du plan média "
-            f"(sélection #{rank}/{total}, score {score})."
+            f"Placer la campagne {industry} sur ce panneau près du {poi} ({where}) permet de {link}. "
+            f"La {vis} et la {aud} de cette face renforcent la cohérence du plan média "
+            f"(sélection #{rank}/{total})."
         ),
         (
-            f"Le choix de ce support {fmt} à {place} répond au brief : le contexte {poi} aide à {link}. "
+            f"Le choix de ce support ({where}) répond au brief : le contexte {poi} aide à {link}. "
             f"Enjeu planner : sécuriser la présence {industry} là où la {vis} et la {aud} convergent."
         ),
         (
-            f"Les flux générés par le {poi} à proximité de ce {fmt} expliquent la sélection : "
+            f"Les flux générés par le {poi} à proximité de ce panneau expliquent la sélection : "
             f"{link}. "
             f"Pour {industry}, c'est un point de contact efficace vers {target}, avec {vis} et {aud}."
         ),
         (
-            f"Ce {fmt} à {city} (quartier {district or '—'}, POI {poi}) est retenu car il permet de {link}. "
-            f"La combinaison {vis} + {aud} maximise la pertinence versus un autre écran du même plan."
+            f"Ce panneau ({where}, POI {poi}) est retenu car il permet de {link}. "
+            f"La combinaison {vis} + {aud} maximise la pertinence versus une autre face du même plan."
         ),
         (
-            f"Dans un parcours type « {poi} », ce panneau {fmt} offre à {industry} un accès direct à {target} : "
+            f"Dans un parcours type « {poi} », ce panneau offre à {industry} un accès direct à {target} : "
             f"{link}. "
             f"Atout clé : {vis} localement, complétée par une {aud}."
         ),
         (
-            f"Affichage {fmt} — l'enjeu sur {place} est de {link}. "
+            f"Sur {where}, l'enjeu de cette face est de {link}. "
             f"Ce panneau apporte la {vis} attendue et une {aud}, utiles pour « {objective} »."
         ),
         (
-            f"Opportunité média : associer {fmt} et {poi} à {city} pour {link}. "
+            f"Opportunité média : associer cette face et le {poi} ({where}) pour {link}. "
             f"Le planner retient ce support (#{rank}/{total}) pour sa {vis} et sa {aud}, "
             f"au service de {industry} et {target}."
         ),

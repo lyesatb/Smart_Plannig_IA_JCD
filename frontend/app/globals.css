@@ -1,10 +1,104 @@
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&display=swap');
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
+:root {
+  --navy: #265aa0;
+  --navy-light: #2f68b0;
+  --navy-muted: #4a82c8;
+  --red: #e2001a;
+  --red-hover: #c8001a;
+  --bg: #f0f2f5;
+  --surface: #ffffff;
+  --surface-alt: #f7f8fa;
+  --border: #e2e6ec;
+  --text-primary: #16283e;
+  --text-secondary: #5a6a7e;
+  --text-muted: #8a9bb0;
+  --shadow-sm: 0 1px 3px rgba(22, 40, 62, 0.07), 0 1px 2px rgba(22, 40, 62, 0.05);
+  --shadow-md: 0 4px 12px rgba(22, 40, 62, 0.08), 0 2px 6px rgba(22, 40, 62, 0.05);
+  --shadow-lg: 0 8px 24px rgba(22, 40, 62, 0.10), 0 4px 12px rgba(22, 40, 62, 0.06);
+  --radius: 12px;
+  --radius-sm: 8px;
+  --radius-lg: 16px;
+}
+
+* {
+  box-sizing: border-box;
+}
+
 body {
-  background: #06070a;
-  color: white;
+  background: var(--bg);
+  color: var(--text-primary);
+  font-family: "DM Sans", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto,
+    Helvetica, Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--text-muted);
+}
+
+.leaflet-container {
+  z-index: 0;
+}
+.leaflet-control-zoom {
+  border: none !important;
+  box-shadow: var(--shadow-md) !important;
+}
+.leaflet-control-zoom a {
+  border-radius: var(--radius-sm) !important;
+  border: none !important;
+  color: var(--text-primary) !important;
+  font-weight: 600 !important;
+}
+
+/* Selects (style Figma) */
+.fig-select {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 100%;
+  padding: 8px 32px 8px 12px;
+  background-color: var(--surface);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  font-family: inherit;
+  outline: none;
+  box-shadow: var(--shadow-sm);
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 14 14' fill='none'><path d='M3 5.5L7 9.5L11 5.5' stroke='%235a6a7e' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/></svg>");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  transition: border-color 0.15s ease;
+}
+.fig-select:focus {
+  border-color: var(--navy);
+}
+.fig-select:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.fig-select-sm {
+  padding: 4px 26px 4px 10px;
+  font-size: 12px;
+  box-shadow: none;
+  border-width: 1.5px;
 }
 
 .glass {

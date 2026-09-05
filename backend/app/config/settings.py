@@ -73,10 +73,20 @@ def _env_bool(name: str, default: bool = False) -> bool:
     return v in ("1", "true", "yes", "on")
 
 
+# Modèles Groq actuels (free/dev tier). Les Llama 3.1/3.3 ont été retirés le
+# 16/08/2026 → remplacés par la famille GPT-OSS. On remappe les anciens noms
+# pour que les .env existants continuent de fonctionner sans modification.
+GROQ_MODEL_FAST_DEFAULT = "openai/gpt-oss-20b"
+GROQ_MODEL_QUALITY_DEFAULT = "openai/gpt-oss-120b"
+
 GROQ_MODEL_ALIASES = {
-    # Groq a retiré 3.1-70b (fév. 2025) → successeur officiel
-    "llama-3.1-70b-versatile": "llama-3.3-70b-versatile",
-    "llama3-70b-8192": "llama-3.3-70b-versatile",
+    # Retirés 16/08/2026 (free/dev) → GPT-OSS
+    "llama-3.1-8b-instant": GROQ_MODEL_FAST_DEFAULT,
+    "llama3-8b-8192": GROQ_MODEL_FAST_DEFAULT,
+    "gemma2-9b-it": GROQ_MODEL_FAST_DEFAULT,
+    "llama-3.3-70b-versatile": GROQ_MODEL_QUALITY_DEFAULT,
+    "llama-3.1-70b-versatile": GROQ_MODEL_QUALITY_DEFAULT,
+    "llama3-70b-8192": GROQ_MODEL_QUALITY_DEFAULT,
 }
 
 
@@ -89,7 +99,7 @@ def _resolve_groq_model_fast() -> str:
     explicit = (os.getenv("GROQ_MODEL_FAST") or os.getenv("GROQ_MODEL") or "").strip()
     if explicit:
         return _normalize_groq_model(explicit)
-    return "llama-3.1-8b-instant"
+    return GROQ_MODEL_FAST_DEFAULT
 
 
 def _resolve_groq_model_quality() -> str:
@@ -99,7 +109,7 @@ def _resolve_groq_model_quality() -> str:
     legacy = (os.getenv("GROQ_MODEL") or "").strip()
     if legacy and "70" in legacy:
         return _normalize_groq_model(legacy)
-    return "llama-3.3-70b-versatile"
+    return GROQ_MODEL_QUALITY_DEFAULT
 
 
 def get_settings() -> Settings:
