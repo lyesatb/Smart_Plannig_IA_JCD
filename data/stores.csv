@@ -1,0 +1,381 @@
+store_id,enseigne,name,address,city,arrondissement,latitude,longitude
+18b7ff04-7b45-4433-89a4-97ed8e43aa05,Nicolas,Nicolas avenue Jean Jaurès,"64 avenue Jean Jaurès, 75001 Paris",Paris,1,48.864452,2.3269
+06b8833f-7888-455d-a37c-eb8686fc71a8,Nicolas,Nicolas rue Montorgueil,"24 rue Montorgueil, 75001 Paris",Paris,1,48.858625,2.341129
+8ff4c4da-071f-48cc-b381-3eecb00c3879,Nicolas,Nicolas rue de Rennes,"57 rue de Rennes, 75001 Paris",Paris,1,48.863767,2.327036
+ddfa073f-243e-4d7c-89eb-4120d12a3ab8,Carrefour City,Carrefour City rue Montorgueil,"52 rue Montorgueil, 75001 Paris",Paris,1,48.858757,2.33844
+0bd532e2-1dc2-4ae1-a30c-2bc3c06ad45d,Carrefour City,Carrefour City rue de Belleville,"58 rue de Belleville, 75001 Paris",Paris,1,48.865524,2.340426
+2869bd21-1ac6-40ce-9eef-f55771f137ae,Monoprix,Monoprix rue de Rivoli,"42 rue de Rivoli, 75001 Paris",Paris,1,48.861789,2.331964
+d314f399-1d21-4722-981a-491af43c8f3c,Franprix,Franprix rue Oberkampf,"57 rue Oberkampf, 75001 Paris",Paris,1,48.865274,2.333205
+66976859-0e6c-41c4-a205-64d07ccb06a9,Franprix,Franprix rue de Rennes,"99 rue de Rennes, 75001 Paris",Paris,1,48.868901,2.333132
+519a88b3-48cd-4889-ad75-6c8c579d81f5,Picard,Picard rue Saint-Antoine,"69 rue Saint-Antoine, 75001 Paris",Paris,1,48.856854,2.34335
+e20be874-3cd7-4990-8322-18d8a17f8c80,Sephora,Sephora rue Montorgueil,"33 rue Montorgueil, 75001 Paris",Paris,1,48.8668,2.340995
+0059b84b-a088-48f9-a3f5-36ceb07d0fa8,Nicolas,Nicolas rue Montorgueil,"77 rue Montorgueil, 75002 Paris",Paris,2,48.874924,2.340371
+09040d1e-66f1-456d-b768-5a6ea0f1e083,Nicolas,Nicolas rue Mouffetard,"149 rue Mouffetard, 75002 Paris",Paris,2,48.872912,2.34517
+5d2aba1a-c14f-455a-9594-c0e2919bc7bd,Nicolas,Nicolas rue des Martyrs,"76 rue des Martyrs, 75002 Paris",Paris,2,48.863992,2.334191
+3241bcd2-2050-4909-9084-f5aefdd76e7e,Carrefour City,Carrefour City avenue des Ternes,"99 avenue des Ternes, 75002 Paris",Paris,2,48.875093,2.349906
+98cf95f6-7c98-49ae-8eb7-5b78c649aa7a,Carrefour City,Carrefour City rue Mouffetard,"43 rue Mouffetard, 75002 Paris",Paris,2,48.865192,2.345514
+5682d8eb-17ee-4c08-a643-c47d3db4d533,Monoprix,Monoprix avenue Jean Jaurès,"176 avenue Jean Jaurès, 75002 Paris",Paris,2,48.866483,2.33699
+62615d74-6aeb-4758-be78-000f8af74497,Franprix,Franprix rue Daguerre,"138 rue Daguerre, 75002 Paris",Paris,2,48.870372,2.344983
+24870468-6a3f-4c5b-aa16-bc09bfdbfa63,Franprix,Franprix avenue Daumesnil,"71 avenue Daumesnil, 75002 Paris",Paris,2,48.871508,2.336068
+d90337fa-10bf-4c46-9f02-5f0b3ce55b5f,Picard,Picard rue Montorgueil,"58 rue Montorgueil, 75002 Paris",Paris,2,48.875153,2.3456
+b4372363-d4f3-4575-8917-1f2d975ed3e4,Sephora,Sephora boulevard Voltaire,"60 boulevard Voltaire, 75002 Paris",Paris,2,48.870885,2.349657
+6c0154a2-eef4-4e96-96cc-10d4e176b0cd,Nicolas,Nicolas avenue Daumesnil,"70 avenue Daumesnil, 75003 Paris",Paris,3,48.867505,2.366101
+2da68e02-a604-4318-97a4-3295563680e8,Nicolas,Nicolas rue de Bretagne,"82 rue de Bretagne, 75003 Paris",Paris,3,48.856927,2.368263
+3980e727-625f-41d9-9ae2-e9f12ed86512,Nicolas,Nicolas rue Ordener,"38 rue Ordener, 75003 Paris",Paris,3,48.858977,2.359985
+1ee1dbb5-fd7a-41e1-95ac-aacd05866ea3,Carrefour City,Carrefour City rue Montorgueil,"139 rue Montorgueil, 75003 Paris",Paris,3,48.859708,2.354933
+bd83125d-2ff7-4952-b04c-725ad9f7683a,Carrefour City,Carrefour City rue de Bretagne,"104 rue de Bretagne, 75003 Paris",Paris,3,48.859678,2.361692
+cdcb404a-480b-41c6-b243-7fd8a80c42c0,Monoprix,Monoprix rue Oberkampf,"132 rue Oberkampf, 75003 Paris",Paris,3,48.861068,2.369947
+ff5fb6de-7f95-4534-95df-ca569d409fcf,Franprix,Franprix avenue des Ternes,"41 avenue des Ternes, 75003 Paris",Paris,3,48.862909,2.365116
+a8e24a79-bcda-43c6-bd21-07323e8ac699,Franprix,Franprix rue de Belleville,"154 rue de Belleville, 75003 Paris",Paris,3,48.864784,2.365842
+012d9b85-481c-44ca-8405-bbf302a80c40,Picard,Picard rue Ordener,"137 rue Ordener, 75003 Paris",Paris,3,48.856889,2.357632
+c50c2707-851b-40dd-93e8-1ddb72357996,Sephora,Sephora rue de Rivoli,"176 rue de Rivoli, 75003 Paris",Paris,3,48.85952,2.361065
+eaaa081b-7dbf-4e5c-ae69-b768fbc03b7d,Nicolas,Nicolas rue Montorgueil,"70 rue Montorgueil, 75004 Paris",Paris,4,48.85739,2.361234
+f0760300-6036-43af-8fc1-4eed88620fde,Nicolas,Nicolas rue de Passy,"113 rue de Passy, 75004 Paris",Paris,4,48.85806,2.354404
+759e6456-5e45-4573-b4d5-22c809ffb43c,Nicolas,Nicolas avenue Jean Jaurès,"130 avenue Jean Jaurès, 75004 Paris",Paris,4,48.849514,2.347665
+e2432ae4-09f6-4a93-ae68-a4f759782fc4,Carrefour City,Carrefour City avenue des Ternes,"162 avenue des Ternes, 75004 Paris",Paris,4,48.857967,2.357754
+b726c9c7-ed61-4b4f-b258-c9ea8cc3d318,Carrefour City,Carrefour City rue Saint-Antoine,"52 rue Saint-Antoine, 75004 Paris",Paris,4,48.851478,2.360379
+b8592017-604e-43d5-bd98-c2f5bcd22aa8,Monoprix,Monoprix rue Montorgueil,"137 rue Montorgueil, 75004 Paris",Paris,4,48.84944,2.36285
+2cd5e9bc-98f3-4508-a0f4-63f8f9ee7408,Franprix,Franprix rue de Tolbiac,"6 rue de Tolbiac, 75004 Paris",Paris,4,48.860159,2.359579
+e1514619-950d-4189-b64c-5688f604118d,Franprix,Franprix rue de Passy,"63 rue de Passy, 75004 Paris",Paris,4,48.848866,2.35486
+311fa77e-e490-4e38-855b-cba041c49ac4,Picard,Picard rue de Rennes,"23 rue de Rennes, 75004 Paris",Paris,4,48.848111,2.36516
+a81eb6fc-20f9-4f59-a0d6-8c788dfb545b,Sephora,Sephora rue Montorgueil,"34 rue Montorgueil, 75004 Paris",Paris,4,48.857547,2.36392
+0372959d-e5ce-41fd-98a7-3817ded82b73,Nicolas,Nicolas rue Montorgueil,"44 rue Montorgueil, 75005 Paris",Paris,5,48.839297,2.349506
+a03b6978-e04c-47f3-99b8-2b8b932d4160,Nicolas,Nicolas rue de Belleville,"56 rue de Belleville, 75005 Paris",Paris,5,48.841211,2.357449
+7510cfbd-c27f-42b7-a1db-f4159fc527e8,Nicolas,Nicolas boulevard Saint-Germain,"81 boulevard Saint-Germain, 75005 Paris",Paris,5,48.850505,2.355105
+e22ea6e0-5e62-41ed-a7d8-ebd4cfc45bfe,Carrefour City,Carrefour City rue Mouffetard,"114 rue Mouffetard, 75005 Paris",Paris,5,48.843086,2.353434
+86f82396-16ee-46cf-813b-c09c680a6314,Carrefour City,Carrefour City rue des Martyrs,"59 rue des Martyrs, 75005 Paris",Paris,5,48.850095,2.34903
+8b09ccf9-6edd-4492-b936-24b23ee93790,Monoprix,Monoprix rue Montorgueil,"60 rue Montorgueil, 75005 Paris",Paris,5,48.838396,2.340421
+6e1cca0f-a7a6-4eb1-8622-f6ff148140c9,Franprix,Franprix boulevard Voltaire,"60 boulevard Voltaire, 75005 Paris",Paris,5,48.845738,2.340144
+374cf935-0fe3-4c44-b72a-7c2a17b674cd,Franprix,Franprix boulevard Magenta,"20 boulevard Magenta, 75005 Paris",Paris,5,48.838444,2.340628
+bbacd6e4-050f-4f80-ba07-c4121cefa1c3,Picard,Picard rue de Tolbiac,"56 rue de Tolbiac, 75005 Paris",Paris,5,48.844698,2.34557
+a8f24cf3-2556-4649-bdf9-9cf52a41e7fa,Sephora,Sephora rue de Bretagne,"149 rue de Bretagne, 75005 Paris",Paris,5,48.845049,2.354467
+649ddfac-5e5d-4bf1-b86c-398174e71f0c,Nicolas,Nicolas rue de Belleville,"50 rue de Belleville, 75006 Paris",Paris,6,48.848917,2.338492
+39119a70-ce13-4871-a169-c5867612c05a,Nicolas,Nicolas rue Mouffetard,"110 rue Mouffetard, 75006 Paris",Paris,6,48.843621,2.33598
+1427ab5c-becb-4ddb-9f2d-a5fa4423ec23,Nicolas,Nicolas boulevard Voltaire,"174 boulevard Voltaire, 75006 Paris",Paris,6,48.848055,2.340077
+b60502e3-f28b-4927-8c59-61a412721f29,Carrefour City,Carrefour City boulevard Voltaire,"105 boulevard Voltaire, 75006 Paris",Paris,6,48.851448,2.335724
+fd9b73e9-9ec2-4578-b5c1-ceb4cf1b620d,Carrefour City,Carrefour City avenue des Ternes,"65 avenue des Ternes, 75006 Paris",Paris,6,48.852495,2.338812
+d5d88503-c331-4945-a4aa-5b17dc133287,Monoprix,Monoprix rue Oberkampf,"110 rue Oberkampf, 75006 Paris",Paris,6,48.844982,2.333526
+82ca37f0-c94f-4e8a-8fd4-8189bf4e3a37,Franprix,Franprix rue de Rennes,"115 rue de Rennes, 75006 Paris",Paris,6,48.844869,2.332053
+16e81ae9-87df-4492-bc01-cc5f14d3b28f,Franprix,Franprix avenue des Ternes,"14 avenue des Ternes, 75006 Paris",Paris,6,48.853612,2.339919
+26dcf59a-f925-40de-836d-89f35d075a0c,Picard,Picard rue de Rivoli,"25 rue de Rivoli, 75006 Paris",Paris,6,48.85143,2.333612
+d16a4971-fef7-4705-840e-da0562e2be8e,Sephora,Sephora rue Daguerre,"106 rue Daguerre, 75006 Paris",Paris,6,48.855269,2.339774
+ddc6fb4c-070b-4e60-9c00-63c5ff85ed52,Nicolas,Nicolas avenue Daumesnil,"17 avenue Daumesnil, 75007 Paris",Paris,7,48.855999,2.306575
+060b52f9-2401-4f61-b807-811dad374fe7,Nicolas,Nicolas avenue Daumesnil,"69 avenue Daumesnil, 75007 Paris",Paris,7,48.851505,2.302343
+1d688605-5dde-4e2d-99cf-31071fdc18ac,Nicolas,Nicolas rue de Passy,"110 rue de Passy, 75007 Paris",Paris,7,48.862171,2.318003
+3525a011-7a8a-4fd8-9485-724f6c090848,Carrefour City,Carrefour City rue Montorgueil,"171 rue Montorgueil, 75007 Paris",Paris,7,48.858952,2.31691
+aba32aca-4f2c-40a8-8fb2-5b57312d3643,Carrefour City,Carrefour City rue de Passy,"57 rue de Passy, 75007 Paris",Paris,7,48.859258,2.305396
+7ccc7778-d136-45db-bdcb-3a2c28ef6881,Monoprix,Monoprix rue Montorgueil,"17 rue Montorgueil, 75007 Paris",Paris,7,48.862762,2.313884
+3a409037-8ea3-48c6-b0a4-ee2b1fee66a9,Franprix,Franprix rue de Bretagne,"124 rue de Bretagne, 75007 Paris",Paris,7,48.859672,2.303443
+b5e11e9a-7a77-4c43-8d8a-3d99a3de6a7b,Franprix,Franprix rue Daguerre,"16 rue Daguerre, 75007 Paris",Paris,7,48.85624,2.319354
+74b9b1de-db60-40d6-b1ac-434c1f1f3755,Picard,Picard rue Daguerre,"19 rue Daguerre, 75007 Paris",Paris,7,48.862651,2.303902
+91c2738f-bbc1-460f-842e-48a1a35f90cf,Sephora,Sephora rue des Martyrs,"105 rue des Martyrs, 75007 Paris",Paris,7,48.85753,2.315804
+7ea9670a-6c60-4f7a-b06e-7d71350af2d4,Nicolas,Nicolas rue des Martyrs,"150 rue des Martyrs, 75008 Paris",Paris,8,48.867378,2.320306
+a103f103-a953-4c87-ba5e-b0c33169a5bf,Nicolas,Nicolas rue de Belleville,"170 rue de Belleville, 75008 Paris",Paris,8,48.874023,2.314888
+0a7d9017-123e-480e-8ba2-dafefafa9bc6,Nicolas,Nicolas avenue Jean Jaurès,"54 avenue Jean Jaurès, 75008 Paris",Paris,8,48.873871,2.312956
+bd5ddef9-ffa4-48d6-8f20-75ff3eb9aa0a,Carrefour City,Carrefour City avenue Jean Jaurès,"103 avenue Jean Jaurès, 75008 Paris",Paris,8,48.875076,2.308784
+d035d748-c0e0-4d0d-af22-e4a26db03b95,Carrefour City,Carrefour City rue Ordener,"82 rue Ordener, 75008 Paris",Paris,8,48.867532,2.31541
+c7b1c9de-31e4-40e3-a55d-1f6b8b83f0c2,Monoprix,Monoprix rue de Rivoli,"119 rue de Rivoli, 75008 Paris",Paris,8,48.878706,2.321215
+6e839087-941b-4e38-8e01-d7d2a870e974,Franprix,Franprix avenue des Ternes,"20 avenue des Ternes, 75008 Paris",Paris,8,48.874396,2.31376
+a906e7b9-df76-42a6-8b82-73d449378927,Franprix,Franprix rue Oberkampf,"91 rue Oberkampf, 75008 Paris",Paris,8,48.873227,2.312618
+58549443-eb77-472b-bc44-3835c3f3e179,Picard,Picard rue Mouffetard,"74 rue Mouffetard, 75008 Paris",Paris,8,48.878032,2.320085
+877d18ea-b775-4d35-a6cc-200025581ce4,Sephora,Sephora rue de Passy,"158 rue de Passy, 75008 Paris",Paris,8,48.867908,2.319175
+787004d4-acc1-40ab-b9f4-9f2b2bd44b66,Nicolas,Nicolas boulevard Haussmann,"4 boulevard Haussmann, 75009 Paris",Paris,9,48.883774,2.343542
+398edd18-d2e6-4a66-89b4-9e33089e5b7f,Nicolas,Nicolas avenue des Ternes,"36 avenue des Ternes, 75009 Paris",Paris,9,48.87935,2.338492
+8f2b7e5e-a4a9-43a6-9b16-9c0563ef510c,Nicolas,Nicolas rue Montorgueil,"41 rue Montorgueil, 75009 Paris",Paris,9,48.873703,2.345194
+453597a5-7a0b-4833-9d7d-5e0d7153ce7a,Carrefour City,Carrefour City boulevard Magenta,"54 boulevard Magenta, 75009 Paris",Paris,9,48.873813,2.339497
+e4db6f0e-38fd-4675-802e-3a5ddf74e58c,Carrefour City,Carrefour City boulevard Haussmann,"127 boulevard Haussmann, 75009 Paris",Paris,9,48.879625,2.344458
+70b6fad8-f7b3-4fe9-8c1c-97a27502e205,Monoprix,Monoprix boulevard Voltaire,"25 boulevard Voltaire, 75009 Paris",Paris,9,48.873516,2.345563
+fde25298-9946-405c-927e-17c98c287b9c,Franprix,Franprix boulevard Voltaire,"2 boulevard Voltaire, 75009 Paris",Paris,9,48.87888,2.343987
+76e5bc08-d8bc-4394-a746-a3b12ddc0a5a,Franprix,Franprix avenue Jean Jaurès,"43 avenue Jean Jaurès, 75009 Paris",Paris,9,48.87467,2.330016
+478fa160-c064-4f66-8b5a-27bd095d6265,Picard,Picard rue de Belleville,"145 rue de Belleville, 75009 Paris",Paris,9,48.880377,2.338434
+9b5161a7-1ae7-4f9b-872a-e8768ef3392e,Sephora,Sephora rue Oberkampf,"141 rue Oberkampf, 75009 Paris",Paris,9,48.870135,2.328905
+f5b3d83e-c6a5-445f-9007-6d053a347533,Nicolas,Nicolas rue Montorgueil,"39 rue Montorgueil, 75010 Paris",Paris,10,48.869604,2.357984
+e0a46ee9-c530-451e-be4a-ea4bdc2346dc,Nicolas,Nicolas rue Mouffetard,"12 rue Mouffetard, 75010 Paris",Paris,10,48.875117,2.351437
+f90f0c35-396d-4f29-8634-1ad099d2cbb7,Nicolas,Nicolas rue des Martyrs,"172 rue des Martyrs, 75010 Paris",Paris,10,48.881685,2.354802
+4e53bb50-ef19-44aa-b2e1-3feb0d33ec06,Carrefour City,Carrefour City rue de Belleville,"160 rue de Belleville, 75010 Paris",Paris,10,48.870539,2.366202
+35c02895-8f44-48f5-8996-cfae04849bb0,Carrefour City,Carrefour City rue des Martyrs,"43 rue des Martyrs, 75010 Paris",Paris,10,48.879593,2.369115
+da7bab7f-5412-4e8f-9576-7ffd8965c763,Monoprix,Monoprix rue de Belleville,"8 rue de Belleville, 75010 Paris",Paris,10,48.882767,2.366815
+f2eb248b-6f6a-4a3c-9cba-475583251f83,Franprix,Franprix rue de Belleville,"173 rue de Belleville, 75010 Paris",Paris,10,48.871611,2.36909
+95ffdb01-0b55-44b1-a224-3fdf44fe14b3,Franprix,Franprix avenue Jean Jaurès,"42 avenue Jean Jaurès, 75010 Paris",Paris,10,48.881197,2.366815
+1d9c2768-93ae-4337-ae30-d605c86e5dc2,Picard,Picard boulevard Voltaire,"122 boulevard Voltaire, 75010 Paris",Paris,10,48.880123,2.352762
+15a8abc6-6a70-46e8-9a89-c70139710ae7,Sephora,Sephora rue Ordener,"91 rue Ordener, 75010 Paris",Paris,10,48.872214,2.366932
+4da3a426-8fb4-4780-b92d-6d8f6dce1ab2,Nicolas,Nicolas rue des Martyrs,"59 rue des Martyrs, 75011 Paris",Paris,11,48.856273,2.385907
+03a72d76-5f62-4843-a07e-e3f053eb17e4,Nicolas,Nicolas boulevard Magenta,"73 boulevard Magenta, 75011 Paris",Paris,11,48.852331,2.373863
+7c2e339c-36ab-4680-ab7d-909a68401d12,Nicolas,Nicolas avenue Jean Jaurès,"91 avenue Jean Jaurès, 75011 Paris",Paris,11,48.864101,2.389338
+697627c5-7922-45e7-85ea-cf1f91adac29,Carrefour City,Carrefour City rue Montorgueil,"86 rue Montorgueil, 75011 Paris",Paris,11,48.860981,2.377994
+e1ea0c20-5cae-4831-bf9d-91d9169e54c5,Carrefour City,Carrefour City avenue Jean Jaurès,"47 avenue Jean Jaurès, 75011 Paris",Paris,11,48.865149,2.372307
+9b1fa546-0259-4974-b69d-20df87508ddf,Monoprix,Monoprix boulevard Voltaire,"29 boulevard Voltaire, 75011 Paris",Paris,11,48.860128,2.389671
+d2f1b36e-2fa8-4fb2-8688-2706cf399a71,Franprix,Franprix boulevard Magenta,"113 boulevard Magenta, 75011 Paris",Paris,11,48.860352,2.376914
+3b141274-db8a-4f45-ab82-f36666143d90,Franprix,Franprix avenue Daumesnil,"149 avenue Daumesnil, 75011 Paris",Paris,11,48.860487,2.380228
+a76f6f64-f7af-41f2-9fa9-6c1771b1065f,Picard,Picard rue de Belleville,"2 rue de Belleville, 75011 Paris",Paris,11,48.854661,2.370888
+ea27b9b6-5ba0-4eda-8104-dd69a6fe6198,Sephora,Sephora boulevard Saint-Germain,"95 boulevard Saint-Germain, 75011 Paris",Paris,11,48.859279,2.38613
+da22f1a7-9b36-4ec2-9402-3faad549ce42,Nicolas,Nicolas boulevard Magenta,"161 boulevard Magenta, 75012 Paris",Paris,12,48.834138,2.430477
+ba39f1e0-5a14-4c14-8280-68060f96cb22,Nicolas,Nicolas rue de Passy,"131 rue de Passy, 75012 Paris",Paris,12,48.832495,2.42846
+060a0819-c530-4dc0-8356-6ac64469d2a8,Nicolas,Nicolas avenue Daumesnil,"180 avenue Daumesnil, 75012 Paris",Paris,12,48.83243,2.419668
+3b4cf3b8-ff0b-4930-9f2a-fe42d8f579e0,Carrefour City,Carrefour City rue de Belleville,"172 rue de Belleville, 75012 Paris",Paris,12,48.832239,2.414046
+ff21e834-ba10-4fd4-97af-979ec0c72b94,Carrefour City,Carrefour City rue Daguerre,"159 rue Daguerre, 75012 Paris",Paris,12,48.841265,2.425046
+445cdd56-5ba7-4722-b0d3-f5b45213262c,Monoprix,Monoprix rue de Rivoli,"79 rue de Rivoli, 75012 Paris",Paris,12,48.836067,2.419622
+aee33f6a-0ae4-4685-a6bc-77c80daaf91a,Franprix,Franprix rue de Bretagne,"157 rue de Bretagne, 75012 Paris",Paris,12,48.832117,2.420098
+08381b42-751d-414b-a73e-3f6bc6ca9bef,Franprix,Franprix rue Ordener,"174 rue Ordener, 75012 Paris",Paris,12,48.837266,2.4208
+ca1a6123-a092-45f1-9a4a-69fed50a2a5d,Picard,Picard rue Daguerre,"170 rue Daguerre, 75012 Paris",Paris,12,48.831092,2.420964
+afeb35eb-aad8-4eab-b969-72c7af8611a9,Sephora,Sephora rue Saint-Antoine,"87 rue Saint-Antoine, 75012 Paris",Paris,12,48.829287,2.421809
+440abe7b-9cc6-4dfa-a0a6-72e24d216948,Nicolas,Nicolas rue des Martyrs,"174 rue des Martyrs, 75013 Paris",Paris,13,48.822607,2.37134
+f0356e01-d37f-41b3-ba33-e1eb36eba6d7,Nicolas,Nicolas rue Oberkampf,"8 rue Oberkampf, 75013 Paris",Paris,13,48.825646,2.368431
+4f6ddbf6-1c55-4b2d-a953-652630f7ce62,Nicolas,Nicolas rue Saint-Antoine,"20 rue Saint-Antoine, 75013 Paris",Paris,13,48.821947,2.371979
+479d9e6a-8ed8-4862-94bd-a1dd3ba992c2,Carrefour City,Carrefour City rue de Bretagne,"51 rue de Bretagne, 75013 Paris",Paris,13,48.827676,2.370023
+acda3aa1-a3ab-40ef-82e5-f1236ecfb587,Carrefour City,Carrefour City avenue Daumesnil,"64 avenue Daumesnil, 75013 Paris",Paris,13,48.831357,2.35998
+a96f04eb-b990-4e81-8ed0-362cc903c373,Monoprix,Monoprix avenue des Ternes,"110 avenue des Ternes, 75013 Paris",Paris,13,48.823366,2.366052
+04eaa4d0-7e80-40a4-a5e6-ac50508d4514,Franprix,Franprix boulevard Haussmann,"120 boulevard Haussmann, 75013 Paris",Paris,13,48.824364,2.368382
+33c590af-91bf-4d3f-baea-b85fcaa16dec,Franprix,Franprix avenue des Ternes,"118 avenue des Ternes, 75013 Paris",Paris,13,48.822003,2.357284
+2a50f3ae-5659-4a21-b3aa-63637e9170e3,Picard,Picard boulevard Haussmann,"145 boulevard Haussmann, 75013 Paris",Paris,13,48.823167,2.361593
+0f9390a4-8757-414c-a2ac-adc1f4623a3d,Sephora,Sephora rue Ordener,"158 rue Ordener, 75013 Paris",Paris,13,48.829636,2.371301
+50904ed5-c274-4656-bb35-1a70915f1123,Nicolas,Nicolas rue de Belleville,"142 rue de Belleville, 75014 Paris",Paris,14,48.83361,2.33444
+4fcac1af-b499-4486-ae81-7efe5cc7a3e6,Nicolas,Nicolas rue de Tolbiac,"117 rue de Tolbiac, 75014 Paris",Paris,14,48.828443,2.319783
+d7fcb1d3-3c7d-4ad4-9085-306e524410f8,Nicolas,Nicolas avenue Jean Jaurès,"135 avenue Jean Jaurès, 75014 Paris",Paris,14,48.825829,2.321545
+4f632c75-4276-4c6d-ada8-fdad6fb8cfdb,Carrefour City,Carrefour City rue Ordener,"21 rue Ordener, 75014 Paris",Paris,14,48.828984,2.321385
+b30666dd-ae0b-4fce-a277-f5786adb20fc,Carrefour City,Carrefour City boulevard Magenta,"83 boulevard Magenta, 75014 Paris",Paris,14,48.83219,2.32129
+f91708c6-24a8-429b-b432-7b6a861ecc5c,Monoprix,Monoprix rue Oberkampf,"61 rue Oberkampf, 75014 Paris",Paris,14,48.834702,2.318212
+2e8cb706-f70e-4f78-8d75-86dcc05a5a0e,Franprix,Franprix boulevard Saint-Germain,"18 boulevard Saint-Germain, 75014 Paris",Paris,14,48.827562,2.319656
+c3ada05b-43e6-4505-8403-a106e1d3ed89,Franprix,Franprix rue Ordener,"108 rue Ordener, 75014 Paris",Paris,14,48.828008,2.323218
+529798f2-d14f-43ba-b2e3-0f4ef63a9374,Picard,Picard avenue Daumesnil,"151 avenue Daumesnil, 75014 Paris",Paris,14,48.823072,2.333258
+bb1db8f7-2a2b-4446-ae26-aab458ba7403,Sephora,Sephora rue de Bretagne,"99 rue de Bretagne, 75014 Paris",Paris,14,48.835445,2.316991
+02ecb12a-636e-49d5-bf13-714d19b3f249,Nicolas,Nicolas avenue Émile Zola,"101 avenue Émile Zola, 75015 Paris",Paris,15,48.839778,2.301655
+0f80cacb-0264-425a-a1ab-78d092df9879,Nicolas,Nicolas boulevard de Grenelle,"139 boulevard de Grenelle, 75015 Paris",Paris,15,48.845048,2.301869
+2513262f-4808-44e9-b5e1-182499ca8c4d,Nicolas,Nicolas rue de la Convention,"126 rue de la Convention, 75015 Paris",Paris,15,48.843565,2.293723
+ff05748b-bb15-49d9-9403-7c81b84d6cf3,Carrefour City,Carrefour City rue de Vaugirard,"101 rue de Vaugirard, 75015 Paris",Paris,15,48.836172,2.291517
+26f41f32-6175-4b20-b1c4-7d7e5b730882,Carrefour City,Carrefour City boulevard de Grenelle,"44 boulevard de Grenelle, 75015 Paris",Paris,15,48.837806,2.296383
+0d4ad9b2-90f9-43f0-b074-e9ddd14d05f6,Monoprix,Monoprix rue de Vaugirard,"102 rue de Vaugirard, 75015 Paris",Paris,15,48.844867,2.301191
+186cab4a-0660-4539-b53f-e9f3cec0d8be,Franprix,Franprix rue du Commerce,"166 rue du Commerce, 75015 Paris",Paris,15,48.841386,2.29606
+17e77498-210c-40c2-b8aa-2e0d85f44d43,Franprix,Franprix rue Lecourbe,"14 rue Lecourbe, 75015 Paris",Paris,15,48.839101,2.300137
+9b16149e-3f94-419d-8142-0581db1e6449,Picard,Picard rue Cambronne,"85 rue Cambronne, 75015 Paris",Paris,15,48.836742,2.289347
+c52a3ae0-e3aa-489f-8379-1fe38d31187d,Sephora,Sephora avenue Émile Zola,"109 avenue Émile Zola, 75015 Paris",Paris,15,48.837825,2.300393
+84487c3f-e065-47a5-8e59-0b967887350c,Nicolas,Nicolas rue de Rivoli,"140 rue de Rivoli, 75016 Paris",Paris,16,48.856932,2.253638
+48775588-ed4a-43ad-b768-e4cdf8933a59,Nicolas,Nicolas rue des Martyrs,"168 rue des Martyrs, 75016 Paris",Paris,16,48.854129,2.271038
+027aac1b-ca92-4a9f-b8cb-c3c9a01dd88b,Nicolas,Nicolas boulevard Voltaire,"9 boulevard Voltaire, 75016 Paris",Paris,16,48.854361,2.271146
+db022462-ae95-4762-9032-d238d591d979,Carrefour City,Carrefour City rue de Rivoli,"161 rue de Rivoli, 75016 Paris",Paris,16,48.866695,2.255987
+b1c57dea-0ee2-468c-b388-826e098a2b39,Carrefour City,Carrefour City avenue des Ternes,"146 avenue des Ternes, 75016 Paris",Paris,16,48.855533,2.254524
+1487ec1d-f9c0-42c4-9d8d-6c0a5ea2329e,Monoprix,Monoprix avenue Jean Jaurès,"96 avenue Jean Jaurès, 75016 Paris",Paris,16,48.866669,2.261301
+71e55d88-969d-4e70-8c7d-28f811b3a9e4,Franprix,Franprix avenue des Ternes,"43 avenue des Ternes, 75016 Paris",Paris,16,48.855749,2.264145
+aeac35a4-18fc-4db2-93a6-e68b2db6743d,Franprix,Franprix rue de Rivoli,"81 rue de Rivoli, 75016 Paris",Paris,16,48.866906,2.254162
+65c517f8-f15d-4abe-af11-53e6e2810cde,Picard,Picard avenue Daumesnil,"103 avenue Daumesnil, 75016 Paris",Paris,16,48.861461,2.270161
+7b740537-1335-4fa3-8646-730e1bee894d,Sephora,Sephora rue de Bretagne,"178 rue de Bretagne, 75016 Paris",Paris,16,48.866581,2.255967
+2312f827-1cd2-4d06-a917-034977311f09,Nicolas,Nicolas rue de Passy,"177 rue de Passy, 75017 Paris",Paris,17,48.891928,2.301657
+af75c6d9-d2f7-4274-a187-6b9e53679890,Nicolas,Nicolas rue de Bretagne,"12 rue de Bretagne, 75017 Paris",Paris,17,48.888706,2.299221
+0f70fd94-4321-4d77-9266-d53de18b552c,Nicolas,Nicolas rue Mouffetard,"19 rue Mouffetard, 75017 Paris",Paris,17,48.885161,2.305368
+242abe91-83a8-4166-a2ba-05335dc1fc48,Carrefour City,Carrefour City rue de Belleville,"127 rue de Belleville, 75017 Paris",Paris,17,48.887383,2.303625
+062d10ce-d1b5-467d-9640-b4836cca4601,Carrefour City,Carrefour City rue Ordener,"41 rue Ordener, 75017 Paris",Paris,17,48.881778,2.316016
+175b97b4-ca37-4298-8f11-803609e542f3,Monoprix,Monoprix avenue Jean Jaurès,"159 avenue Jean Jaurès, 75017 Paris",Paris,17,48.886397,2.311476
+62118194-ed4f-4a3e-809e-59aecd49a152,Franprix,Franprix rue de Tolbiac,"121 rue de Tolbiac, 75017 Paris",Paris,17,48.891615,2.307563
+c1450276-6bc6-491f-a3f1-fe3bbdcf6901,Franprix,Franprix avenue Jean Jaurès,"84 avenue Jean Jaurès, 75017 Paris",Paris,17,48.886398,2.311421
+62c15041-c9ec-46ae-8314-522047a5d42b,Picard,Picard rue de Rennes,"73 rue de Rennes, 75017 Paris",Paris,17,48.892224,2.313415
+4c683cc7-8997-4571-b399-5d6b803bdd2e,Sephora,Sephora rue Ordener,"147 rue Ordener, 75017 Paris",Paris,17,48.892643,2.301677
+379cb244-8350-474a-83a3-f5219f834e86,Nicolas,Nicolas rue de Rivoli,"128 rue de Rivoli, 75018 Paris",Paris,18,48.894045,2.34618
+d94fba11-4041-4024-b389-6e3ef1fcc3fd,Nicolas,Nicolas boulevard Saint-Germain,"92 boulevard Saint-Germain, 75018 Paris",Paris,18,48.897413,2.342237
+e4d3d798-bfa9-4ce9-8c77-815d6050c641,Nicolas,Nicolas rue Saint-Antoine,"72 rue Saint-Antoine, 75018 Paris",Paris,18,48.89667,2.345407
+28e1cef5-46f0-4024-afaa-a4f4615ab179,Carrefour City,Carrefour City boulevard Saint-Germain,"23 boulevard Saint-Germain, 75018 Paris",Paris,18,48.893281,2.348933
+23393381-3766-46af-a0af-6b848e2e13b3,Carrefour City,Carrefour City rue Montorgueil,"63 rue Montorgueil, 75018 Paris",Paris,18,48.888879,2.346729
+3869636f-7ee3-436b-8780-1e24c60d2b81,Monoprix,Monoprix rue de Tolbiac,"116 rue de Tolbiac, 75018 Paris",Paris,18,48.895169,2.351518
+8d47876d-d581-4943-b757-01e602175ae9,Franprix,Franprix rue des Martyrs,"105 rue des Martyrs, 75018 Paris",Paris,18,48.896601,2.340461
+e151e28f-ea76-4bdf-8fb7-61fa5be7b2ae,Franprix,Franprix rue de Bretagne,"96 rue de Bretagne, 75018 Paris",Paris,18,48.895185,2.344724
+beea4b6e-252d-4354-b46b-798e09f34c58,Picard,Picard rue de Belleville,"142 rue de Belleville, 75018 Paris",Paris,18,48.892126,2.349218
+b066296e-0276-43c0-9f88-11876b224797,Sephora,Sephora avenue Jean Jaurès,"80 avenue Jean Jaurès, 75018 Paris",Paris,18,48.890131,2.352657
+d398d743-19e8-4e7a-acb4-24867e0c5730,Nicolas,Nicolas boulevard Saint-Germain,"82 boulevard Saint-Germain, 75019 Paris",Paris,19,48.88362,2.377113
+48a238dc-3bbe-49bc-9077-e13b1d2e1f09,Nicolas,Nicolas rue Daguerre,"51 rue Daguerre, 75019 Paris",Paris,19,48.881774,2.385417
+027c4aa7-03f3-4704-9c7a-e245315edfd3,Nicolas,Nicolas rue de Bretagne,"136 rue de Bretagne, 75019 Paris",Paris,19,48.883129,2.384384
+c9dc4ba5-5697-4861-bc39-22a7aa427894,Carrefour City,Carrefour City boulevard Saint-Germain,"77 boulevard Saint-Germain, 75019 Paris",Paris,19,48.888455,2.39431
+37054626-481f-4e09-900c-830aa4ba1e8e,Carrefour City,Carrefour City rue de Rivoli,"138 rue de Rivoli, 75019 Paris",Paris,19,48.883285,2.378289
+66991f86-d607-49ee-82ec-c9354811393c,Monoprix,Monoprix boulevard Voltaire,"143 boulevard Voltaire, 75019 Paris",Paris,19,48.881872,2.37561
+b2ef5ec3-8403-4348-b275-a50eec361a33,Franprix,Franprix rue de Tolbiac,"28 rue de Tolbiac, 75019 Paris",Paris,19,48.88419,2.393582
+67f76d69-5f06-460e-a7b1-9f1c897a5a4b,Franprix,Franprix rue de Tolbiac,"124 rue de Tolbiac, 75019 Paris",Paris,19,48.892318,2.386181
+b8c41a68-20ec-482c-ad0f-4bd79354d551,Picard,Picard boulevard Voltaire,"66 boulevard Voltaire, 75019 Paris",Paris,19,48.886267,2.378387
+9c5df000-6398-4a7a-90c9-e6e07d17ae35,Sephora,Sephora rue de Rennes,"104 rue de Rennes, 75019 Paris",Paris,19,48.893275,2.384255
+ba84d146-2f97-4e91-8a4d-be65787fee87,Nicolas,Nicolas boulevard Voltaire,"40 boulevard Voltaire, 75020 Paris",Paris,20,48.863284,2.40274
+4a4fa344-0e91-49d5-b08b-3083a6d2b469,Nicolas,Nicolas rue de Passy,"23 rue de Passy, 75020 Paris",Paris,20,48.858489,2.402457
+1b09dac2-1062-4976-9e72-1bfda2d6adaf,Nicolas,Nicolas rue de Belleville,"157 rue de Belleville, 75020 Paris",Paris,20,48.870315,2.393569
+f54cff38-4846-45c4-b3d6-2dc25b7c88f0,Carrefour City,Carrefour City boulevard Haussmann,"99 boulevard Haussmann, 75020 Paris",Paris,20,48.864746,2.403568
+ea026e7a-3e7f-4123-bef5-87990f65df6f,Carrefour City,Carrefour City rue de Bretagne,"111 rue de Bretagne, 75020 Paris",Paris,20,48.862707,2.400054
+d5b92b0b-94c0-4b86-b654-63f15e161fc8,Monoprix,Monoprix rue Saint-Antoine,"27 rue Saint-Antoine, 75020 Paris",Paris,20,48.860675,2.403621
+40a89d32-98ee-4471-a52d-c78e058a3181,Franprix,Franprix boulevard Saint-Germain,"69 boulevard Saint-Germain, 75020 Paris",Paris,20,48.869666,2.395356
+33ed4fe6-4315-4c13-9918-27225f260bd0,Franprix,Franprix rue Daguerre,"143 rue Daguerre, 75020 Paris",Paris,20,48.865646,2.394341
+459b483d-e4b9-4ee8-80b5-13b3d8762fbe,Picard,Picard rue Ordener,"178 rue Ordener, 75020 Paris",Paris,20,48.857451,2.391254
+8e8cdfde-f1b5-42fc-bb5a-c80b5d1421c0,Sephora,Sephora rue des Martyrs,"75 rue des Martyrs, 75020 Paris",Paris,20,48.864713,2.397025
+7f227077-95a4-421c-af8d-8010e5b0c634,Nicolas,Nicolas rue Ordener,"20 rue Ordener, Lyon",Lyon,,45.776417,4.851939
+fc7be5d8-920d-42e6-a415-afe2579e6db1,Nicolas,Nicolas rue de Bretagne,"171 rue de Bretagne, Lyon",Lyon,,45.775243,4.869613
+64a72b52-a800-41bf-a6ed-0bfb4e0cdcd4,Nicolas,Nicolas avenue des Ternes,"141 avenue des Ternes, Lyon",Lyon,,45.782234,4.811526
+3fd1106a-1088-4f70-ace8-1f0e75e6b88c,Nicolas,Nicolas avenue Jean Jaurès,"38 avenue Jean Jaurès, Lyon",Lyon,,45.747489,4.807619
+136c4a49-92eb-42aa-a14d-16e6e97a073a,Nicolas,Nicolas rue de Passy,"154 rue de Passy, Lyon",Lyon,,45.738285,4.808974
+1863cd13-b785-4395-b96d-958dedda39ef,Nicolas,Nicolas rue de Passy,"114 rue de Passy, Lyon",Lyon,,45.778937,4.841237
+339ba233-6b28-45d6-aa33-454fa757e9fe,Nicolas,Nicolas avenue Daumesnil,"71 avenue Daumesnil, Lyon",Lyon,,45.741461,4.850794
+6bc63b75-c82d-4dd4-9a79-a34024295da4,Nicolas,Nicolas rue de Rennes,"155 rue de Rennes, Lyon",Lyon,,45.764028,4.835204
+f2afd0de-4e9e-499a-a296-ec288460c82f,Nicolas,Nicolas boulevard Magenta,"156 boulevard Magenta, Lyon",Lyon,,45.736392,4.830262
+ed7ecd0d-6731-4750-9793-26e9d9b87d05,Carrefour City,Carrefour City rue de Bretagne,"152 rue de Bretagne, Lyon",Lyon,,45.749022,4.803006
+708b4a32-f053-4037-97ee-90094d65534f,Carrefour City,Carrefour City avenue Jean Jaurès,"149 avenue Jean Jaurès, Lyon",Lyon,,45.791047,4.875666
+3b433a5e-89bd-44e9-8514-d0dfa42c08f5,Carrefour City,Carrefour City rue de Tolbiac,"134 rue de Tolbiac, Lyon",Lyon,,45.736414,4.856202
+cb11e297-c2b5-428f-843c-36ddbf6e9b30,Carrefour City,Carrefour City rue Daguerre,"151 rue Daguerre, Lyon",Lyon,,45.773091,4.868986
+2a50b908-1004-499f-ba3d-18a39f2fdcee,Carrefour City,Carrefour City rue de Rennes,"122 rue de Rennes, Lyon",Lyon,,45.760153,4.86084
+643e2ab9-96ca-4bb4-92cd-0da99e02d3c4,Carrefour City,Carrefour City avenue des Ternes,"43 avenue des Ternes, Lyon",Lyon,,45.754878,4.822365
+9188fca1-2f08-40da-ac2a-1fcf5d46a37e,Monoprix,Monoprix rue de Passy,"171 rue de Passy, Lyon",Lyon,,45.753788,4.851194
+41b5b486-70a0-4253-9f92-d40bdeae79de,Monoprix,Monoprix rue Montorgueil,"11 rue Montorgueil, Lyon",Lyon,,45.790712,4.860785
+bec40aa7-b87b-4088-ad54-4792dee7a250,Monoprix,Monoprix boulevard Magenta,"31 boulevard Magenta, Lyon",Lyon,,45.76129,4.820861
+c6c967de-f2a3-49a3-befb-e146a9aef833,Franprix,Franprix boulevard Haussmann,"2 boulevard Haussmann, Lyon",Lyon,,45.792211,4.828034
+09b8a625-625b-4f2f-a1be-6d4b0d81f59d,Franprix,Franprix rue de Belleville,"15 rue de Belleville, Lyon",Lyon,,45.77346,4.839107
+2984c7f7-ab83-4654-9eaa-13631c240abd,Franprix,Franprix rue de Tolbiac,"162 rue de Tolbiac, Lyon",Lyon,,45.745255,4.824642
+93d90981-c74c-43eb-b4d4-4a25bbb9c85f,Franprix,Franprix avenue Jean Jaurès,"142 avenue Jean Jaurès, Lyon",Lyon,,45.760522,4.799829
+d4b7b553-02cc-4a72-aa07-23460a8028b6,Franprix,Franprix rue de Tolbiac,"33 rue de Tolbiac, Lyon",Lyon,,45.741861,4.818742
+4856871e-8472-4839-a535-54a5bfcd4dcb,Franprix,Franprix rue des Martyrs,"42 rue des Martyrs, Lyon",Lyon,,45.735732,4.846102
+1bede047-1991-4d3d-801e-40bd56d8acdc,Picard,Picard rue de Belleville,"25 rue de Belleville, Lyon",Lyon,,45.752645,4.796794
+b367d3e9-7c40-4fdf-b4f7-0b5da65329db,Picard,Picard avenue des Ternes,"120 avenue des Ternes, Lyon",Lyon,,45.747482,4.863012
+7a5e9c41-4373-48b3-983b-cfc296f3c7a9,Picard,Picard rue Oberkampf,"129 rue Oberkampf, Lyon",Lyon,,45.790824,4.847517
+b5395058-f841-41ff-8993-0c1941968c56,Sephora,Sephora avenue Jean Jaurès,"108 avenue Jean Jaurès, Lyon",Lyon,,45.789959,4.819049
+25ca3d19-9f52-45e1-932b-e57c3d8c21b1,Sephora,Sephora rue des Martyrs,"118 rue des Martyrs, Lyon",Lyon,,45.784083,4.87412
+3bbbfc29-2d64-4a41-90b8-37f4c7dfebc9,Sephora,Sephora rue Saint-Antoine,"132 rue Saint-Antoine, Lyon",Lyon,,45.767076,4.826387
+6b2001dc-a573-440d-9cd2-72f2321b7f9f,Nicolas,Nicolas rue de Rennes,"72 rue de Rennes, Marseille",Marseille,,43.311278,5.340721
+9904b4c1-dcd9-4e5e-b8ae-391659461577,Nicolas,Nicolas boulevard Magenta,"131 boulevard Magenta, Marseille",Marseille,,43.312861,5.398153
+2e0aaa62-e607-4d57-8e78-4cb50d192199,Nicolas,Nicolas rue de Passy,"152 rue de Passy, Marseille",Marseille,,43.28253,5.330005
+edc9c494-6986-4225-b874-a9adc25d8217,Nicolas,Nicolas rue Oberkampf,"116 rue Oberkampf, Marseille",Marseille,,43.301295,5.382595
+9c90c7ea-6fd8-484d-bf45-b28d2dc3b006,Nicolas,Nicolas rue Montorgueil,"141 rue Montorgueil, Marseille",Marseille,,43.298815,5.35741
+c3a56aee-76d4-4c05-bc94-af8f836e8b2b,Nicolas,Nicolas boulevard Saint-Germain,"180 boulevard Saint-Germain, Marseille",Marseille,,43.289133,5.404428
+4c69aae6-6931-4720-a88f-9226af70e380,Nicolas,Nicolas rue de Belleville,"13 rue de Belleville, Marseille",Marseille,,43.280828,5.360438
+99441cce-a8ef-4287-8b53-43df2660f93a,Nicolas,Nicolas avenue Daumesnil,"100 avenue Daumesnil, Marseille",Marseille,,43.285591,5.367638
+ad9a8549-0e46-4eb0-aeaf-2f6f2ee3f5c8,Nicolas,Nicolas rue Oberkampf,"128 rue Oberkampf, Marseille",Marseille,,43.325805,5.393191
+26e16703-236f-4fc1-b8ff-54e2b3faae76,Carrefour City,Carrefour City rue de Bretagne,"86 rue de Bretagne, Marseille",Marseille,,43.324389,5.3399
+0a46ebfa-508f-4312-b8bf-fadd335ed55e,Carrefour City,Carrefour City rue Ordener,"27 rue Ordener, Marseille",Marseille,,43.318682,5.399735
+e164d3cf-eb68-490b-8cdd-76c82f3a1418,Carrefour City,Carrefour City rue Oberkampf,"106 rue Oberkampf, Marseille",Marseille,,43.298057,5.366354
+54f226c2-93e1-44f9-ba36-fdf9c8eebd54,Carrefour City,Carrefour City rue de Rennes,"122 rue de Rennes, Marseille",Marseille,,43.318756,5.407397
+1fd2ff84-30a4-461a-bd6a-5ad1e78505e2,Carrefour City,Carrefour City rue Saint-Antoine,"179 rue Saint-Antoine, Marseille",Marseille,,43.313392,5.351002
+c216d403-5c62-4881-9995-34d022e282bf,Carrefour City,Carrefour City boulevard Magenta,"174 boulevard Magenta, Marseille",Marseille,,43.290349,5.336225
+df645f6c-76c9-4c1d-8cf2-0419bc7d60e6,Monoprix,Monoprix boulevard Magenta,"162 boulevard Magenta, Marseille",Marseille,,43.318061,5.360201
+4784a155-5aa9-4ca4-a5f9-91f5945524f7,Monoprix,Monoprix rue Montorgueil,"11 rue Montorgueil, Marseille",Marseille,,43.309623,5.390552
+c95ccab6-83c3-42dd-82a5-aeed8a40ab83,Monoprix,Monoprix rue de Passy,"60 rue de Passy, Marseille",Marseille,,43.303548,5.348582
+b928fc4a-3cff-43ff-a4af-f21a7e1a315e,Franprix,Franprix avenue des Ternes,"164 avenue des Ternes, Marseille",Marseille,,43.311306,5.364518
+15866556-dccf-4896-9bbb-51ffe403e670,Franprix,Franprix rue Daguerre,"179 rue Daguerre, Marseille",Marseille,,43.308733,5.337841
+4494efc3-6622-4b59-bcfa-83ec7360fd82,Franprix,Franprix boulevard Magenta,"16 boulevard Magenta, Marseille",Marseille,,43.284468,5.332116
+f8664e65-657a-4922-ad6f-cfb5f8240d87,Franprix,Franprix rue Oberkampf,"64 rue Oberkampf, Marseille",Marseille,,43.284102,5.359787
+ba7e876e-1d27-4c1f-90ae-d68c13c5f836,Franprix,Franprix rue Daguerre,"45 rue Daguerre, Marseille",Marseille,,43.29837,5.375074
+f923580e-afcc-4a76-a5c7-43ab73b06002,Franprix,Franprix avenue Daumesnil,"160 avenue Daumesnil, Marseille",Marseille,,43.277004,5.378559
+7e590a67-bae8-47bf-a944-ed44682e8bc4,Picard,Picard rue de Bretagne,"38 rue de Bretagne, Marseille",Marseille,,43.307488,5.369613
+54a06465-890f-4dd0-ae7b-5642898a31bd,Picard,Picard rue Ordener,"67 rue Ordener, Marseille",Marseille,,43.280431,5.380832
+3eef38fe-6586-4291-82ec-a21e6f24b6a0,Picard,Picard rue Ordener,"75 rue Ordener, Marseille",Marseille,,43.30651,5.401713
+ac3720eb-d8c1-4861-a66e-c57e749737eb,Sephora,Sephora rue Ordener,"90 rue Ordener, Marseille",Marseille,,43.307157,5.342438
+03e7a8b6-2049-4bae-8ef3-9db550b06a23,Sephora,Sephora rue de Belleville,"178 rue de Belleville, Marseille",Marseille,,43.325759,5.353732
+75b30454-3e0d-49ac-8ef6-b805d12379de,Sephora,Sephora boulevard Saint-Germain,"100 boulevard Saint-Germain, Marseille",Marseille,,43.281506,5.397424
+9e89d9e8-fdd9-4031-86cb-f21b19ca490a,Nicolas,Nicolas avenue Daumesnil,"148 avenue Daumesnil, Bordeaux",Bordeaux,,44.859,-0.610668
+14ed8c79-61a7-456e-8dee-173aace67245,Nicolas,Nicolas rue de Passy,"7 rue de Passy, Bordeaux",Bordeaux,,44.829338,-0.59553
+32c2ab2d-0b32-4ecc-a2ec-18e624bf86fe,Nicolas,Nicolas avenue Jean Jaurès,"4 avenue Jean Jaurès, Bordeaux",Bordeaux,,44.866477,-0.566542
+94a6697c-2188-4ce6-a692-0c03d6203e77,Nicolas,Nicolas boulevard Voltaire,"157 boulevard Voltaire, Bordeaux",Bordeaux,,44.841756,-0.564336
+61b8f291-33a7-4638-8d8e-a62dc2e4422f,Nicolas,Nicolas rue de Passy,"60 rue de Passy, Bordeaux",Bordeaux,,44.85251,-0.552573
+6000efa5-bad5-496e-92eb-8e8132c28f69,Nicolas,Nicolas boulevard Saint-Germain,"160 boulevard Saint-Germain, Bordeaux",Bordeaux,,44.844224,-0.591014
+671761e8-c73b-4ad9-a067-a022289892c0,Nicolas,Nicolas rue Oberkampf,"162 rue Oberkampf, Bordeaux",Bordeaux,,44.822838,-0.558754
+4e06da0d-ce83-431b-ab71-26033beb0975,Nicolas,Nicolas boulevard Voltaire,"81 boulevard Voltaire, Bordeaux",Bordeaux,,44.81363,-0.569003
+fd2bb766-2432-4e86-81ad-dc9266da708c,Nicolas,Nicolas rue Mouffetard,"35 rue Mouffetard, Bordeaux",Bordeaux,,44.855117,-0.616531
+71428d24-34ad-41f1-80f3-b1e92b75218e,Carrefour City,Carrefour City rue de Belleville,"46 rue de Belleville, Bordeaux",Bordeaux,,44.813208,-0.595591
+b3918614-32e4-4b07-9095-81f502981134,Carrefour City,Carrefour City rue Mouffetard,"137 rue Mouffetard, Bordeaux",Bordeaux,,44.819848,-0.556279
+63da0738-025a-473d-b336-396cdfad18a9,Carrefour City,Carrefour City rue Daguerre,"67 rue Daguerre, Bordeaux",Bordeaux,,44.837908,-0.597398
+c17f7c0f-0358-49db-bd74-2d9434a6d30a,Carrefour City,Carrefour City rue de Passy,"88 rue de Passy, Bordeaux",Bordeaux,,44.862643,-0.543665
+b76924fe-8b5f-4eb9-b628-3e598b6161cb,Carrefour City,Carrefour City rue de Rennes,"38 rue de Rennes, Bordeaux",Bordeaux,,44.856054,-0.581733
+4212ca2d-68c2-4b5b-82b2-31a46230907e,Carrefour City,Carrefour City avenue Daumesnil,"144 avenue Daumesnil, Bordeaux",Bordeaux,,44.853049,-0.601151
+26da4ce4-2eee-4dce-b14b-f9b412942b3e,Monoprix,Monoprix rue de Rivoli,"69 rue de Rivoli, Bordeaux",Bordeaux,,44.829747,-0.555945
+3206a66e-7fd8-4666-95ce-bae4fc5fd252,Monoprix,Monoprix avenue Jean Jaurès,"151 avenue Jean Jaurès, Bordeaux",Bordeaux,,44.839994,-0.582817
+86b3b8c9-9298-4d75-bd25-25c0f17f7e2b,Monoprix,Monoprix rue Mouffetard,"29 rue Mouffetard, Bordeaux",Bordeaux,,44.830662,-0.568116
+5cee9113-5a05-4f40-a560-4f956813e51d,Franprix,Franprix rue Saint-Antoine,"145 rue Saint-Antoine, Bordeaux",Bordeaux,,44.84829,-0.581482
+94a40926-a0e8-4e05-9bf4-e7d53457c7fb,Franprix,Franprix rue de Rennes,"164 rue de Rennes, Bordeaux",Bordeaux,,44.82748,-0.570393
+f1b68ce2-319c-448c-8852-bbbaa2ed1bbe,Franprix,Franprix rue de Passy,"168 rue de Passy, Bordeaux",Bordeaux,,44.857231,-0.546449
+6ba71a42-0f03-487f-ae28-5015190f4569,Franprix,Franprix boulevard Voltaire,"79 boulevard Voltaire, Bordeaux",Bordeaux,,44.832298,-0.608018
+ead492a0-4d2e-4e83-953f-b217fe3d67ee,Franprix,Franprix rue des Martyrs,"139 rue des Martyrs, Bordeaux",Bordeaux,,44.867556,-0.60991
+5732b1bd-6bca-4536-adc9-420dccc75ca2,Franprix,Franprix rue Montorgueil,"109 rue Montorgueil, Bordeaux",Bordeaux,,44.81594,-0.582908
+f7833955-f92b-4850-9d75-ae854d6ac348,Picard,Picard rue de Belleville,"169 rue de Belleville, Bordeaux",Bordeaux,,44.84304,-0.561072
+7f71491e-293e-4139-9785-da247a6b67ac,Picard,Picard rue de Belleville,"73 rue de Belleville, Bordeaux",Bordeaux,,44.813741,-0.580052
+3bd41a30-d871-4ee3-91e1-1b9b62a1ce96,Picard,Picard rue Ordener,"115 rue Ordener, Bordeaux",Bordeaux,,44.809763,-0.589558
+a5787ed0-abd9-40c3-8e3c-be27ecccfd0d,Sephora,Sephora avenue des Ternes,"177 avenue des Ternes, Bordeaux",Bordeaux,,44.864833,-0.550764
+caa9fb1b-8555-4329-8dab-a05043fd9223,Sephora,Sephora rue Mouffetard,"17 rue Mouffetard, Bordeaux",Bordeaux,,44.82984,-0.547064
+8fd11da7-225a-4a80-a4e6-2215a790b454,Sephora,Sephora avenue des Ternes,"118 avenue des Ternes, Bordeaux",Bordeaux,,44.831688,-0.604015
+41e7b811-6d00-48d1-bd4f-3f4b7cb39b60,Nicolas,Nicolas rue Saint-Antoine,"7 rue Saint-Antoine, Lille",Lille,,50.6047,3.034268
+32bae594-6f32-4241-9664-ef92acb6bc92,Nicolas,Nicolas rue Oberkampf,"146 rue Oberkampf, Lille",Lille,,50.602235,3.043981
+9d599b58-71a2-4ab4-9ac7-8559ef3b926e,Nicolas,Nicolas rue Montorgueil,"55 rue Montorgueil, Lille",Lille,,50.611512,3.083685
+a838d511-f72f-4cc8-96ad-921b3098fa91,Nicolas,Nicolas rue des Martyrs,"86 rue des Martyrs, Lille",Lille,,50.634383,3.082344
+c00cc73d-cf7b-4cc6-9299-37612de6bc00,Nicolas,Nicolas rue Saint-Antoine,"2 rue Saint-Antoine, Lille",Lille,,50.645662,3.080392
+86f4838e-6cdc-4b74-8c3c-fc19be845ab3,Nicolas,Nicolas rue Oberkampf,"140 rue Oberkampf, Lille",Lille,,50.615836,3.096022
+4f644379-0a0b-403b-9806-de722759943c,Nicolas,Nicolas rue de Rivoli,"35 rue de Rivoli, Lille",Lille,,50.614239,3.03126
+ff3d676a-9885-491e-bdc3-3e633df42718,Nicolas,Nicolas rue des Martyrs,"152 rue des Martyrs, Lille",Lille,,50.600092,3.080499
+8d4fd85f-a3fa-48f6-822a-51e957953726,Nicolas,Nicolas boulevard Voltaire,"34 boulevard Voltaire, Lille",Lille,,50.618626,3.03124
+208ffd20-e430-47cb-ac0d-d4758dc58a29,Carrefour City,Carrefour City rue de Rennes,"123 rue de Rennes, Lille",Lille,,50.643703,3.059387
+6cbd04e3-f3bb-446c-877d-d6cb0f7c014c,Carrefour City,Carrefour City rue de Bretagne,"29 rue de Bretagne, Lille",Lille,,50.626097,3.046263
+e69066c3-050d-419d-89d0-da5b4af8ecf5,Carrefour City,Carrefour City rue Saint-Antoine,"13 rue Saint-Antoine, Lille",Lille,,50.62632,3.035024
+10d6ea08-5ef2-4665-b341-147d8332a1ed,Carrefour City,Carrefour City boulevard Haussmann,"79 boulevard Haussmann, Lille",Lille,,50.642835,3.09
+ff1764c5-d492-4ea1-99da-da0e45612b86,Carrefour City,Carrefour City boulevard Voltaire,"124 boulevard Voltaire, Lille",Lille,,50.626683,3.094422
+a5d43dfb-0002-42c8-8274-0244ad98b94e,Carrefour City,Carrefour City avenue des Ternes,"127 avenue des Ternes, Lille",Lille,,50.650038,3.051402
+0905f639-1f68-4e8c-bbcf-5ce7193eadce,Monoprix,Monoprix rue de Rennes,"84 rue de Rennes, Lille",Lille,,50.641944,3.052785
+1c1ed789-2740-4036-a5a0-ebb126e04462,Monoprix,Monoprix avenue Jean Jaurès,"161 avenue Jean Jaurès, Lille",Lille,,50.635698,3.022555
+78384035-cf32-4b2a-9b16-1a879fba58e3,Monoprix,Monoprix boulevard Magenta,"99 boulevard Magenta, Lille",Lille,,50.637185,3.061169
+d5bbb039-9815-49e9-ad26-b1712c0f02bc,Franprix,Franprix rue Ordener,"131 rue Ordener, Lille",Lille,,50.658878,3.059745
+e1d5f2d1-3fcf-4837-92a4-0b0b7a3d95ea,Franprix,Franprix avenue des Ternes,"169 avenue des Ternes, Lille",Lille,,50.635526,3.025234
+0400607b-dd6c-4eaf-add4-7e042fd27355,Franprix,Franprix boulevard Saint-Germain,"112 boulevard Saint-Germain, Lille",Lille,,50.638255,3.078817
+64880ac0-6728-4e14-9926-ae226929918d,Franprix,Franprix boulevard Magenta,"118 boulevard Magenta, Lille",Lille,,50.626293,3.035579
+548cf804-1807-45e1-bc10-fa7525ffd73b,Franprix,Franprix boulevard Magenta,"111 boulevard Magenta, Lille",Lille,,50.623124,3.075669
+387a4be0-9d9f-4939-b4b5-c36d76fd8e6c,Franprix,Franprix rue Oberkampf,"177 rue Oberkampf, Lille",Lille,,50.617951,3.037691
+5916e1e7-77b6-4536-aa8e-3c6d903aa616,Picard,Picard rue de Rennes,"25 rue de Rennes, Lille",Lille,,50.654579,3.022671
+95f6da24-2ca5-4bcc-bf06-1d313c2a0299,Picard,Picard rue Mouffetard,"35 rue Mouffetard, Lille",Lille,,50.625113,3.076867
+25aa2df1-311e-4bd7-939c-b50cf4648beb,Picard,Picard rue Montorgueil,"145 rue Montorgueil, Lille",Lille,,50.632582,3.064217
+c68d119c-4071-4587-9e50-684cca66f0b9,Sephora,Sephora rue Mouffetard,"172 rue Mouffetard, Lille",Lille,,50.618979,3.027079
+ce562965-15e4-44b2-a7db-719477c4340b,Sephora,Sephora boulevard Voltaire,"75 boulevard Voltaire, Lille",Lille,,50.655668,3.051135
+3b616b02-550f-4bc6-a3c7-a4e9a41790cc,Sephora,Sephora rue de Bretagne,"131 rue de Bretagne, Lille",Lille,,50.635225,3.045432
+ba6f80d2-f765-4ab5-bbc3-00d50b7d46df,Nicolas,Nicolas rue des Martyrs,"29 rue des Martyrs, Toulouse",Toulouse,,43.587464,1.456739
+842b021a-7eea-4a76-b385-39ce40d7bf51,Nicolas,Nicolas avenue des Ternes,"73 avenue des Ternes, Toulouse",Toulouse,,43.595707,1.448701
+cf928aec-522b-4c39-a779-5966639e0e9c,Nicolas,Nicolas rue Montorgueil,"161 rue Montorgueil, Toulouse",Toulouse,,43.609146,1.468778
+87a89b79-2783-470e-b34f-d3b281511ae5,Nicolas,Nicolas rue de Rivoli,"157 rue de Rivoli, Toulouse",Toulouse,,43.611514,1.455616
+66bd9ace-0bc4-4f8d-903a-f548e1d5e039,Nicolas,Nicolas avenue Jean Jaurès,"9 avenue Jean Jaurès, Toulouse",Toulouse,,43.630445,1.470557
+f3452d22-8379-4d97-89db-09167d194ff2,Nicolas,Nicolas rue de Passy,"88 rue de Passy, Toulouse",Toulouse,,43.585525,1.460416
+a1d874c5-ddd3-458a-8212-d9842d99989e,Nicolas,Nicolas rue Oberkampf,"146 rue Oberkampf, Toulouse",Toulouse,,43.595761,1.418712
+d1c1e70f-1dbc-4580-9e92-a7b385bd6aaf,Nicolas,Nicolas rue de Rivoli,"25 rue de Rivoli, Toulouse",Toulouse,,43.614141,1.409767
+736d74f6-160c-403a-8291-8af63849fe8b,Nicolas,Nicolas rue de Belleville,"118 rue de Belleville, Toulouse",Toulouse,,43.619467,1.421411
+4defd5a3-10dd-4bce-9c5f-05d5b90379be,Carrefour City,Carrefour City boulevard Magenta,"147 boulevard Magenta, Toulouse",Toulouse,,43.595154,1.433804
+3d019c71-0d0f-419f-aaf3-3f634d5fe20c,Carrefour City,Carrefour City rue Oberkampf,"42 rue Oberkampf, Toulouse",Toulouse,,43.610473,1.474867
+fb0dd347-de2f-41e9-94d3-cad4d55a9355,Carrefour City,Carrefour City rue de Rennes,"71 rue de Rennes, Toulouse",Toulouse,,43.619966,1.408181
+68f352dd-f93d-47a3-b7c2-3a4348748ed1,Carrefour City,Carrefour City rue Saint-Antoine,"115 rue Saint-Antoine, Toulouse",Toulouse,,43.601287,1.438121
+62c385fc-7092-40af-baeb-39f69ffcbe7a,Carrefour City,Carrefour City boulevard Haussmann,"31 boulevard Haussmann, Toulouse",Toulouse,,43.599551,1.421446
+986e73b0-34d8-422f-9a98-3cabd381dfc9,Carrefour City,Carrefour City rue de Bretagne,"126 rue de Bretagne, Toulouse",Toulouse,,43.59541,1.413071
+dfcd1efd-10b6-42fc-b875-2de66d37ccb5,Monoprix,Monoprix rue des Martyrs,"103 rue des Martyrs, Toulouse",Toulouse,,43.606316,1.428874
+aa073997-971d-4d4b-9c32-e9595361584b,Monoprix,Monoprix boulevard Saint-Germain,"79 boulevard Saint-Germain, Toulouse",Toulouse,,43.633767,1.408583
+d80502ee-db36-4ca9-a6cc-dc2e86c3a5e8,Monoprix,Monoprix avenue Jean Jaurès,"76 avenue Jean Jaurès, Toulouse",Toulouse,,43.631419,1.465588
+55b8298d-620e-4ff0-af3a-d04b1907adb9,Franprix,Franprix rue de Belleville,"46 rue de Belleville, Toulouse",Toulouse,,43.594387,1.404818
+0c59e91b-0470-45f4-9ae7-1d9eea7271da,Franprix,Franprix rue des Martyrs,"130 rue des Martyrs, Toulouse",Toulouse,,43.582451,1.446807
+afd9650b-6222-4595-9402-ffd7633bb65b,Franprix,Franprix rue Mouffetard,"20 rue Mouffetard, Toulouse",Toulouse,,43.608223,1.457644
+faa57b06-d1ef-4bc8-8c1b-42837687ac09,Franprix,Franprix rue de Belleville,"6 rue de Belleville, Toulouse",Toulouse,,43.598524,1.463563
+1a3d427e-3e61-46d4-a81d-7847c68da61f,Franprix,Franprix boulevard Magenta,"149 boulevard Magenta, Toulouse",Toulouse,,43.602285,1.410429
+d1c03810-e1ab-43bc-8376-1fe51bda8881,Franprix,Franprix rue de Belleville,"76 rue de Belleville, Toulouse",Toulouse,,43.600457,1.436554
+49ec60d2-ebbc-4bf4-b713-395e1fb5a119,Picard,Picard boulevard Magenta,"45 boulevard Magenta, Toulouse",Toulouse,,43.58161,1.405869
+381af3cb-238c-4369-b6ab-251250765c0b,Picard,Picard rue Mouffetard,"24 rue Mouffetard, Toulouse",Toulouse,,43.622779,1.45365
+c3166f02-79b1-419f-88d9-ab3f39541f53,Picard,Picard rue de Belleville,"152 rue de Belleville, Toulouse",Toulouse,,43.600903,1.412669
+a7fe19ad-768b-4562-8d0a-a0796dfa7b0b,Sephora,Sephora rue de Passy,"88 rue de Passy, Toulouse",Toulouse,,43.598727,1.410492
+14b82d96-c07d-4906-8c3e-99fe5642155a,Sephora,Sephora rue de Rennes,"132 rue de Rennes, Toulouse",Toulouse,,43.587994,1.466529
+a4e4c126-c763-4b09-94cb-29b42e5c726c,Sephora,Sephora boulevard Saint-Germain,"91 boulevard Saint-Germain, Toulouse",Toulouse,,43.612693,1.446648
+6286fd82-d5e2-4788-bc0a-1fdd79853d34,Nicolas,Nicolas rue Oberkampf,"62 rue Oberkampf, Nantes",Nantes,,47.209466,-1.516942
+869b0260-d6e5-4f2f-afb0-89bf27354082,Nicolas,Nicolas rue Daguerre,"156 rue Daguerre, Nantes",Nantes,,47.194568,-1.573123
+6be24f2f-fc6a-42a2-abb2-17715b4e744b,Nicolas,Nicolas rue de Rennes,"47 rue de Rennes, Nantes",Nantes,,47.197572,-1.532868
+1fbdeeba-24b6-4969-9f7e-318ce5c2a219,Nicolas,Nicolas rue Ordener,"146 rue Ordener, Nantes",Nantes,,47.245478,-1.543364
+c50133bd-9461-4458-ac12-c452e9ebc1bf,Nicolas,Nicolas rue de Bretagne,"166 rue de Bretagne, Nantes",Nantes,,47.233993,-1.557688
+12f87c60-5111-4fe6-a049-335fd57179b8,Nicolas,Nicolas boulevard Magenta,"40 boulevard Magenta, Nantes",Nantes,,47.226518,-1.543638
+a7d8c5f0-55e7-445c-a28e-637ee712ba33,Nicolas,Nicolas rue de Passy,"72 rue de Passy, Nantes",Nantes,,47.214786,-1.556086
+18b3aa84-c750-44fb-b6ba-c8dc643b4579,Nicolas,Nicolas rue de Rennes,"81 rue de Rennes, Nantes",Nantes,,47.223885,-1.565445
+42618123-db91-4b03-98b1-3b0aba84bb6d,Nicolas,Nicolas rue Mouffetard,"75 rue Mouffetard, Nantes",Nantes,,47.216105,-1.590591
+08883551-6b96-4c15-9163-aefa5e07cd90,Carrefour City,Carrefour City rue de Rennes,"159 rue de Rennes, Nantes",Nantes,,47.193004,-1.52446
+7bbb7810-62d5-4d5e-9581-7dc17c6384db,Carrefour City,Carrefour City rue de Bretagne,"143 rue de Bretagne, Nantes",Nantes,,47.224045,-1.562841
+827a023f-0c8f-4990-b2e0-f372e9401761,Carrefour City,Carrefour City boulevard Voltaire,"117 boulevard Voltaire, Nantes",Nantes,,47.245654,-1.534486
+fdddbed1-c6d6-451d-ba90-3b224a8a3eb1,Carrefour City,Carrefour City boulevard Saint-Germain,"84 boulevard Saint-Germain, Nantes",Nantes,,47.242943,-1.547867
+8f1e8ef7-b692-4cdf-80ec-3b91affd9fd5,Carrefour City,Carrefour City boulevard Voltaire,"117 boulevard Voltaire, Nantes",Nantes,,47.2247,-1.553491
+bca74adf-9330-411e-b180-aba91ed3f450,Carrefour City,Carrefour City boulevard Magenta,"23 boulevard Magenta, Nantes",Nantes,,47.19461,-1.52167
+48585df0-5838-4aed-ad17-33007af25394,Monoprix,Monoprix rue des Martyrs,"114 rue des Martyrs, Nantes",Nantes,,47.218673,-1.579795
+b449b900-67e6-4ce2-8111-e76f103d53c8,Monoprix,Monoprix rue Saint-Antoine,"42 rue Saint-Antoine, Nantes",Nantes,,47.247859,-1.551675
+58b8ed1e-1f31-4f57-b352-f6119be8105f,Monoprix,Monoprix avenue Daumesnil,"106 avenue Daumesnil, Nantes",Nantes,,47.210234,-1.520165
+2e5c977d-415f-42ba-a925-ffaa50171010,Franprix,Franprix boulevard Voltaire,"163 boulevard Voltaire, Nantes",Nantes,,47.234868,-1.539288
+03f9b532-61b0-4dfd-83df-21991170f81e,Franprix,Franprix avenue des Ternes,"144 avenue des Ternes, Nantes",Nantes,,47.227238,-1.588327
+4e087a8a-0c79-48fa-bd75-a2b51df78758,Franprix,Franprix rue Saint-Antoine,"40 rue Saint-Antoine, Nantes",Nantes,,47.229103,-1.570868
+1e1efe2b-55a2-4035-87dc-d51d2a6cb04e,Franprix,Franprix rue Oberkampf,"91 rue Oberkampf, Nantes",Nantes,,47.208402,-1.546981
+88bb4831-ace4-4bcb-b020-5edd6960bcfb,Franprix,Franprix avenue Daumesnil,"35 avenue Daumesnil, Nantes",Nantes,,47.207014,-1.541116
+abf43a66-a9df-45b5-a152-bfc443a0c75d,Franprix,Franprix rue de Passy,"145 rue de Passy, Nantes",Nantes,,47.224102,-1.51856
+112a9ed7-894f-4e56-a1e1-1873d07265fb,Picard,Picard rue Oberkampf,"173 rue Oberkampf, Nantes",Nantes,,47.211001,-1.530267
+5d94a9f9-f84f-4f30-829f-c4df5c874396,Picard,Picard boulevard Haussmann,"25 boulevard Haussmann, Nantes",Nantes,,47.23057,-1.517831
+4170ed8e-acc1-47a8-a003-0b815fe13f69,Picard,Picard rue Mouffetard,"6 rue Mouffetard, Nantes",Nantes,,47.227161,-1.559727
+88c5834e-1501-4e2e-a5e7-6542db5c5b06,Sephora,Sephora boulevard Saint-Germain,"89 boulevard Saint-Germain, Nantes",Nantes,,47.210156,-1.579179
+3312a2a1-da59-4812-9006-04bc6bcc2b65,Sephora,Sephora rue des Martyrs,"37 rue des Martyrs, Nantes",Nantes,,47.24526,-1.554698
+fdfb1b80-e8f0-489f-8b42-20836312328b,Sephora,Sephora avenue des Ternes,"131 avenue des Ternes, Nantes",Nantes,,47.197697,-1.569937
